@@ -1,15 +1,7 @@
-/*
- * trabajo1.hpp
- *
- *  Created on: 18 feb. 2017
- *      Author: Jorge
- */
 
 #ifndef TRABAJO1_TRABAJO1_HPP_
 #define TRABAJO1_TRABAJO1_HPP_
 #include <iostream>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
@@ -19,11 +11,13 @@
 using namespace cv;
 using namespace std;
 
-cv::VideoCapture TheVideoCapturer;
-cv::Mat bgrMap;
-std::string snapshotFilename = "imagen";
+VideoCapture TheVideoCapturer;
+Mat bgrMap;
+string snapshotFilename = "imagen";
 
-int capturarImagen();
+int mostrarMenu();		// Función que muestra el menú por pantalla.
+int mejorarContraste();	// Función que mejora el contraste.
+int cambiarColor(int);		// Método que cambia el color.
+int reducirColores();	// Método que reduce el número de colores.
 
-
-#endif /* TRABAJO1_TRABAJO1_HPP_ */
+#endif
