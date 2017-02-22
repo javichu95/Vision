@@ -17,16 +17,17 @@ int main(int argc, char *argv[]) {
 
 	while(key != 27 && TheVideoCapturer.grab()) {		// Mientras sea distinto de ESC...
 
-		TheVideoCapturer.retrieve(bgrMap);
+		TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
 		key = waitKey(30);
 
+		// Comprobamos si es opción válida para cambiar de vista.
 		if(key == 99 || key == 114 || key == 97 || key == 118
 				|| key == 109 || key == 98 || key == 100
 				|| key == 13){
 			keyAnterior = key;
 		}
 		switch(keyAnterior){
-		case 99:		// Se aplica contraste.*/
+		case 99:		// Se aplica contraste.
 			bgrMap = mejorarContraste(bgrMap);
 			break;
 		case 114:	// Se cambia el color de la piel a rojo.
@@ -39,6 +40,7 @@ int main(int argc, char *argv[]) {
 			bgrMap = cambiarColor(bgrMap,0);
 			break;
 		case 109:	// Se reduce el número de colores.
+			bgrMap = reducirColores(bgrMap);
 			break;
 		case 98:	// Se aplica distorsión de barril.
 			break;
@@ -71,7 +73,7 @@ int mostrarMenu(){
 	cout << "| 6.- Pulsa 'b' para aplicar distorsion de barril.       |" << endl;
 	cout << "| 7.- Pulsa 'd' para aplicar distorsion de cojin.        |" << endl;
 	cout << "| 8.- Pulsa 'esc' para terminar.                         |" << endl;
-	cout << "|--------------------------------------------------------|" << endl;
+	cout << "|--------------------------------------------------------|" << endl << endl;
 
 	return 0;
 }
@@ -89,55 +91,64 @@ Mat mejorarContraste(Mat bgrMap){
 	equalizeHist(canales[1], canales[1]);
 	equalizeHist(canales[2], canales[2]);
 
-	merge(canales,bgrMap);
+	merge(canales,bgrMap);		// Se juntan los tres canales.
 
-	return bgrMap;
+	return bgrMap;		// Devolvemos la matriz.
 }
 
 /*
  * Función que cambia el color de la piel.
  */
 Mat cambiarColor(Mat bgrMap, int color){
-	Mat hsi;
-	cvtColor(bgrMap, hsi,CV_BGR2HSV);
+
+	Mat hsv;		// Matriz para la nueva representación del color.
+	cvtColor(bgrMap, hsv,CV_BGR2HSV);		// Cambiamos a hsv.
+
 	if(color == 0){		// Color azul.
-		for (int i=0; i<hsi.rows; i++) {
-			 uchar* data= hsi.ptr<uchar>(i); // puntero a la fila i
-			 for (int j=0; j<hsi.cols*hsi.channels(); j = j +3) {
-				 if((data[j] <= 25) || (data[j] >= 162 && data[j] <= 180)) {
-					 data[j] = 60;
-				 }
-				 // o si te gusta mas, puedes hacerlo:
-				 // *data++= *data/div*div + div/2;
-			 }
-		 }
-	} else if(color == 1){		// Color verde.
-		for (int i=0; i<hsi.rows; i++) {
-			uchar* data= hsi.ptr<uchar>(i); // puntero a la fila i
-			for (int j=0; j<hsi.cols*hsi.channels(); j = j +3) {
+		for (int i=0; i<hsv.rows; i++) {		// Recorremos las filas.
+			uchar* data= hsv.ptr<uchar>(i); 		// Obtenemos la fila.
+			for (int j=0; j<hsv.cols*hsv.channels(); j = j +3) {
+				// Miramos si está en el rango de la piel.
 				if((data[j] <= 25) || (data[j] >= 162 && data[j] <= 180)) {
-					 data[j] = 120;
-				 }
-			 }
-		 }
+					data[j] = 60;		// Lo ponemos a azul.
+				}
+			}
+		}
+	} else if(color == 1){		// Color verde.
+		for (int i=0; i<hsv.rows; i++) {	// Recorremos las filas.
+			uchar* data= hsv.ptr<uchar>(i); // Obtenemos la fila.
+			for (int j=0; j<hsv.cols*hsv.channels(); j = j +3) {
+				// Miramos si está en el rango de la piel.
+				if((data[j] <= 25) || (data[j] >= 162 && data[j] <= 180)) {
+					data[j] = 120;		// Lo ponemos a verde.
+				}
+			}
+		}
 	} else{				// Color rojo.
-		for (int i=0; i<hsi.rows; i++) {
-			 uchar* data= hsi.ptr<uchar>(i); // puntero a la fila i
-			 for (int j=0; j<hsi.cols*hsi.channels(); j = j +3) {
-				 if((data[j] <= 25) || (data[j] >= 162 && data[j] <= 180)) {
-					 data[j] = 0;
-				 }
-			 }
-		 }
+		for (int i=0; i<hsv.rows; i++) {	// Recorremos las filas.
+			uchar* data= hsv.ptr<uchar>(i); 	// Obtenemos la fila.
+			for (int j=0; j<hsv.cols*hsv.channels(); j = j +3) {
+				if((data[j] <= 25) || (data[j] >= 162 && data[j] <= 180)) {
+					 data[j] = 0;		// Lo ponemos a rojo.
+				}
+			}
+		}
 	}
-	cvtColor(hsi, bgrMap,CV_HSV2BGR);
-	return bgrMap;
+
+	cvtColor(hsv, bgrMap,CV_HSV2BGR);		// Cambiamos a RGB.
+	return bgrMap;		// Devolvemos la matriz.
 }
 
 /*
  * Método que reduce el número de colores.
  */
-int reducirColores(){
+Mat reducirColores(Mat bgrMap){
 
-	return 0;
+	if(primero){
+		cout << "Escriba número de colores para la imagen: ";
+		cin >> numColores;
+		primero = false;
+	}
+
+	return bgrMap;		// Devolvemos la matriz.
 }
