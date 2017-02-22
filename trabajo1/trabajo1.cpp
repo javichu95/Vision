@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
 		if(key == 99 || key == 114 || key == 97 || key == 118
 				|| key == 109 || key == 98 || key == 100
-				|| key == 127){
+				|| key == 13){
 			keyAnterior = key;
 		}
 		switch(keyAnterior){
@@ -33,10 +33,10 @@ int main(int argc, char *argv[]) {
 			bgrMap = cambiarColor(bgrMap,2);
 			break;
 		case 97:	// Se cambia el color de la piel a azul.
-			cambiarColor(bgrMap,1);
+			bgrMap = cambiarColor(bgrMap,1);
 			break;
 		case 118:	// Se cambia el color de la piel a verde.
-			cambiarColor(bgrMap,0);
+			bgrMap = cambiarColor(bgrMap,0);
 			break;
 		case 109:	// Se reduce el número de colores.
 			break;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 			break;
 		case 100:	// Se aplica distorsión de cojín.
 			break;
-		case 127:		// Se vuelve a poner normal.
+		case 13:		// Se vuelve a poner normal.
 			TheVideoCapturer.retrieve(bgrMap);
 			break;
 		default:
@@ -104,26 +104,31 @@ Mat cambiarColor(Mat bgrMap, int color){
 		for (int i=0; i<hsi.rows; i++) {
 			 uchar* data= hsi.ptr<uchar>(i); // puntero a la fila i
 			 for (int j=0; j<hsi.cols*hsi.channels(); j = j +3) {
-				 if((data[j] <= 50) || (data[j] >= 325 && data[j] < 360)) {
-					 data[j] = 0;
+				 if((data[j] <= 25) || (data[j] >= 162 && data[j] <= 180)) {
+					 data[j] = 60;
 				 }
 				 // o si te gusta mas, puedes hacerlo:
 				 // *data++= *data/div*div + div/2;
 			 }
 		 }
 	} else if(color == 1){		// Color verde.
-
+		for (int i=0; i<hsi.rows; i++) {
+			uchar* data= hsi.ptr<uchar>(i); // puntero a la fila i
+			for (int j=0; j<hsi.cols*hsi.channels(); j = j +3) {
+				if((data[j] <= 25) || (data[j] >= 162 && data[j] <= 180)) {
+					 data[j] = 120;
+				 }
+			 }
+		 }
 	} else{				// Color rojo.
 		for (int i=0; i<hsi.rows; i++) {
-					 uchar* data= hsi.ptr<uchar>(i); // puntero a la fila i
-					 for (int j=0; j<hsi.cols*hsi.channels(); j = j +3) {
-						 if((data[j] <= 50) || (data[j] >= 325 && data[j] < 360)) {
-							 data[j] = 0;
-						 }
-						 // o si te gusta mas, puedes hacerlo:
-						 // *data++= *data/div*div + div/2;
-					 }
+			 uchar* data= hsi.ptr<uchar>(i); // puntero a la fila i
+			 for (int j=0; j<hsi.cols*hsi.channels(); j = j +3) {
+				 if((data[j] <= 25) || (data[j] >= 162 && data[j] <= 180)) {
+					 data[j] = 0;
 				 }
+			 }
+		 }
 	}
 	cvtColor(hsi, bgrMap,CV_HSV2BGR);
 	return bgrMap;
