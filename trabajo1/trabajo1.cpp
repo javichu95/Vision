@@ -30,13 +30,13 @@ int main(int argc, char *argv[]) {
 			bgrMap = mejorarContraste(bgrMap);
 			break;
 		case 114:	// Se cambia el color de la piel a rojo.
-			cambiarColor(0);
+			bgrMap = cambiarColor(bgrMap,2);
 			break;
 		case 97:	// Se cambia el color de la piel a azul.
-			cambiarColor(1);
+			cambiarColor(bgrMap,1);
 			break;
 		case 118:	// Se cambia el color de la piel a verde.
-			cambiarColor(2);
+			cambiarColor(bgrMap,0);
 			break;
 		case 109:	// Se reduce el número de colores.
 			break;
@@ -97,17 +97,36 @@ Mat mejorarContraste(Mat bgrMap){
 /*
  * Función que cambia el color de la piel.
  */
-int cambiarColor(int color){
-
-	if(color == 0){		// Color rojo.
-
+Mat cambiarColor(Mat bgrMap, int color){
+	Mat hsi;
+	cvtColor(bgrMap, hsi,CV_BGR2HSV);
+	if(color == 0){		// Color azul.
+		for (int i=0; i<hsi.rows; i++) {
+			 uchar* data= hsi.ptr<uchar>(i); // puntero a la fila i
+			 for (int j=0; j<hsi.cols*hsi.channels(); j = j +3) {
+				 if((data[j] <= 50) || (data[j] >= 325 && data[j] < 360)) {
+					 data[j] = 0;
+				 }
+				 // o si te gusta mas, puedes hacerlo:
+				 // *data++= *data/div*div + div/2;
+			 }
+		 }
 	} else if(color == 1){		// Color verde.
 
-	} else{				// Color azul.
-
+	} else{				// Color rojo.
+		for (int i=0; i<hsi.rows; i++) {
+					 uchar* data= hsi.ptr<uchar>(i); // puntero a la fila i
+					 for (int j=0; j<hsi.cols*hsi.channels(); j = j +3) {
+						 if((data[j] <= 50) || (data[j] >= 325 && data[j] < 360)) {
+							 data[j] = 0;
+						 }
+						 // o si te gusta mas, puedes hacerlo:
+						 // *data++= *data/div*div + div/2;
+					 }
+				 }
 	}
-
-	return 0;
+	cvtColor(hsi, bgrMap,CV_HSV2BGR);
+	return bgrMap;
 }
 
 /*
