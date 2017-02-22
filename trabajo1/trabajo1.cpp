@@ -6,6 +6,7 @@
 int main(int argc, char *argv[]) {
 
 	char key = 0;	// Variable para la tecla.
+	char keyAnterior = 0;	// Variable para última tecla pulsada.
 	mostrarMenu();	// Se muestra el menú de operaciones.
 	TheVideoCapturer.open(0);	// Se abre la cámara.
 
@@ -15,41 +16,44 @@ int main(int argc, char *argv[]) {
 	}
 
 	while(key != 27 && TheVideoCapturer.grab()) {		// Mientras sea distinto de ESC...
-		TheVideoCapturer.retrieve(bgrMap);
-		imshow("BGR image", bgrMap);	// Se muestra lo visto por la cámara.
 
+		TheVideoCapturer.retrieve(bgrMap);
 		key = waitKey(30);
-		switch(key){
-		case 99:		// Se aplica contraste.
-			cout << "Aplicando contraste..." << endl;
-			mejorarContraste();
+
+		if(key == 99 || key == 114 || key == 97 || key == 118
+				|| key == 109 || key == 98 || key == 100
+				|| key == 127){
+			keyAnterior = key;
+		}
+		switch(keyAnterior){
+		case 99:		// Se aplica contraste.*/
+			bgrMap = mejorarContraste(bgrMap);
 			break;
 		case 114:	// Se cambia el color de la piel a rojo.
-			cout << "Cambiando color a rojo..." << endl;
 			cambiarColor(0);
 			break;
 		case 97:	// Se cambia el color de la piel a azul.
-			cout << "Cambiando color a azul..." << endl;
 			cambiarColor(1);
 			break;
 		case 118:	// Se cambia el color de la piel a verde.
-			cout << "Cambiando color a verde..." << endl;
 			cambiarColor(2);
 			break;
 		case 109:	// Se reduce el número de colores.
-			cout << "Reduciendo el número de colores..." << endl;
 			break;
 		case 98:	// Se aplica distorsión de barril.
-			cout << "Aplicando distorsión de barril..." << endl;
 			break;
 		case 100:	// Se aplica distorsión de cojín.
-			cout << "Aplicando distorsión de cojín..." << endl;
+			break;
+		case 127:		// Se vuelve a poner normal.
+			TheVideoCapturer.retrieve(bgrMap);
 			break;
 		default:
 			break;
 		}
+		imshow("BGR camara", bgrMap);	// Se muestra lo visto por la cámara.
 	}
 }
+
 /*
  * Método que muestra el menú de operaciones por pantalla.
  */
@@ -75,9 +79,19 @@ int mostrarMenu(){
 /*
  * Función que mejora el constraste de la imagen.
 */
-int mejorarContraste(){
+Mat mejorarContraste(Mat bgrMap){
 
-	return 0;
+	vector<Mat> canales;			// Vector para los tres canales.
+	split(bgrMap, canales);		// Separamos los tres canales.
+
+	// Se ecualizan los canales.
+	equalizeHist(canales[0], canales[0]);
+	equalizeHist(canales[1], canales[1]);
+	equalizeHist(canales[2], canales[2]);
+
+	merge(canales,bgrMap);
+
+	return bgrMap;
 }
 
 /*

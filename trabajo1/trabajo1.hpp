@@ -16,7 +16,7 @@ Mat bgrMap;
 string snapshotFilename = "imagen";
 
 int mostrarMenu();		// Función que muestra el menú por pantalla.
-int mejorarContraste();	// Función que mejora el contraste.
+Mat mejorarContraste(Mat);	// Función que mejora el contraste.
 int cambiarColor(int);		// Método que cambia el color.
 int reducirColores();	// Método que reduce el número de colores.
 
