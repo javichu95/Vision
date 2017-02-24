@@ -149,6 +149,33 @@ Mat reducirColores(Mat bgrMap){
 		cin >> numColores;
 		primero = false;
 	}
+	//Matriz en la que se guardara cada canal de la imagen en una fila.
+	Mat imagenVector = Mat(bgrMap.cols*bgrMap.rows,3,CV_32F);
+	//Se guardan los datos en la nueva matriz.
+	for (int i=0; i<bgrMap.rows; i++) {	// Recorremos las filas.
+		for (int j=0; j<bgrMap.cols; j++) {
+			imagenVector.at<float>(i + j*bgrMap.rows,0) = bgrMap.at<Vec3b>(i,j)[0];
+			imagenVector.at<float>(i + j*bgrMap.rows,1) = bgrMap.at<Vec3b>(i,j)[1];
+			imagenVector.at<float>(i + j*bgrMap.rows,2) = bgrMap.at<Vec3b>(i,j)[2];
+		}
+	}
+	//Se definen los argumentos para realizar kmeans.
+	int intentos = 1;
+	Mat centroides;
+	Mat etiq;
+	//Se utiliza kmeans para reducir el numero de colores mediante clustering.
+	kmeans(imagenVector, numColores, etiq,
+			TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,1,1.0),
+			intentos, KMEANS_PP_CENTERS, centroides);
 
+	//Se modifica la imagen con los colores reducidos.
+	for (int i=0; i<bgrMap.rows; i++) {	// Recorremos las filas.
+		for (int j=0; j<bgrMap.cols; j++) {
+			int indice = etiq.at<int>(i+j*bgrMap.rows,0);
+			bgrMap.at<Vec3b>(i,j)[0] = centroides.at<float>(indice,0);
+			bgrMap.at<Vec3b>(i,j)[1] = centroides.at<float>(indice,1);
+			bgrMap.at<Vec3b>(i,j)[2] = centroides.at<float>(indice,2);
+		}
+	}
 	return bgrMap;		// Devolvemos la matriz.
 }
