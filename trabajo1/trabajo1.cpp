@@ -28,25 +28,43 @@ int main(int argc, char *argv[]) {
 		}
 		switch(keyAnterior){
 		case 99:		// Se aplica contraste.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true; primeroBar = true;
 			bgrMap = mejorarContraste(bgrMap);
 			break;
 		case 114:	// Se cambia el color de la piel a rojo.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true; primeroBar = true;
 			bgrMap = cambiarColor(bgrMap,2);
 			break;
 		case 97:	// Se cambia el color de la piel a azul.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true; primeroBar = true;
 			bgrMap = cambiarColor(bgrMap,1);
 			break;
 		case 118:	// Se cambia el color de la piel a verde.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true; primeroBar = true;
 			bgrMap = cambiarColor(bgrMap,0);
 			break;
 		case 109:	// Se reduce el número de colores.
+			// Se inicializan las variables.
+			primeroCoj = true;	primeroBar = true;
 			bgrMap = reducirColores(bgrMap);
 			break;
 		case 98:	// Se aplica distorsión de barril.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true;
+			//bgrMap = distorsionBarril(bgrMap);
 			break;
 		case 100:	// Se aplica distorsión de cojín.
+			// Se inicializan las variables.
+			primeroRed = true; primeroBar = true;
+			bgrMap = distorsionCojin(bgrMap);
 			break;
 		case 13:		// Se vuelve a poner normal.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true;	primeroBar = true;
 			TheVideoCapturer.retrieve(bgrMap);
 			break;
 		default:
@@ -144,14 +162,16 @@ Mat cambiarColor(Mat bgrMap, int color){
  */
 Mat reducirColores(Mat bgrMap){
 
-	if(primero){
+	if(primeroRed){		// Si es la primera iteración se pregunta número.
 		cout << "Escriba número de colores para la imagen: ";
 		cin >> numColores;
-		primero = false;
+		primeroRed = false;
 	}
-	//Matriz en la que se guardara cada canal de la imagen en una fila.
+
+	// Matriz en la que se guardará cada canal de la imagen en una fila.
 	Mat imagenVector = Mat(bgrMap.cols*bgrMap.rows,3,CV_32F);
-	//Se guardan los datos en la nueva matriz.
+
+	// Se guardan los datos en la nueva matríz.
 	for (int i=0; i<bgrMap.rows; i++) {	// Recorremos las filas.
 		for (int j=0; j<bgrMap.cols; j++) {
 			imagenVector.at<float>(i + j*bgrMap.rows,0) = bgrMap.at<Vec3b>(i,j)[0];
@@ -159,16 +179,18 @@ Mat reducirColores(Mat bgrMap){
 			imagenVector.at<float>(i + j*bgrMap.rows,2) = bgrMap.at<Vec3b>(i,j)[2];
 		}
 	}
-	//Se definen los argumentos para realizar kmeans.
+
+	//Se definen los argumentos para realizar k-means.
 	int intentos = 1;
 	Mat centroides;
 	Mat etiq;
-	//Se utiliza kmeans para reducir el numero de colores mediante clustering.
+
+	// Se utiliza k-means para reducir el número de colores mediante clustering.
 	kmeans(imagenVector, numColores, etiq,
 			TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,1,1.0),
 			intentos, KMEANS_PP_CENTERS, centroides);
 
-	//Se modifica la imagen con los colores reducidos.
+	// Se modifica la imagen con los colores reducidos.
 	for (int i=0; i<bgrMap.rows; i++) {	// Recorremos las filas.
 		for (int j=0; j<bgrMap.cols; j++) {
 			int indice = etiq.at<int>(i+j*bgrMap.rows,0);
@@ -177,5 +199,35 @@ Mat reducirColores(Mat bgrMap){
 			bgrMap.at<Vec3b>(i,j)[2] = centroides.at<float>(indice,2);
 		}
 	}
+
+	return bgrMap;		// Devolvemos la matriz.
+}
+
+/*
+ * Función que aplica una distorsión de cojín a la imagen.
+ */
+Mat distorsionCojin(Mat bgrMap){
+
+	if(primeroCoj){		// Si es la primera iteración se pregunta número.
+		cout << "Escriba coeficiente de distorsión (positivo): ";
+		cin >> coeficiente;
+		primeroCoj = false;
+	}
+
+	Mat map_x, map_y, output;
+	double Cy = (double)bgrMap.cols/2;
+	double Cx = (double)bgrMap.rows/2;
+	map_x.create(bgrMap.size(), CV_32FC1);
+	map_y.create(bgrMap.size(), CV_32FC1);
+
+	for (int x=0; x<map_x.rows; x++) {
+		for (int y=0; y<map_y.cols; y++) {
+			double r2 = (x-Cx)*(x-Cx) + (y-Cy)*(y-Cy);
+			map_x.at<float>(x,y) = (double) ((y-Cy)/(1 + double(coeficiente/1000000.0)*r2)+Cy); // se suma para obtener la posicion absoluta
+			map_y.at<float>(x,y) = (double) ((x-Cx)/(1 + double(coeficiente/1000000.0)*r2)+Cx); // la posicion relativa del punto al centro
+		}
+	}
+	remap(bgrMap, bgrMap, map_x, map_y, CV_INTER_LINEAR);
+
 	return bgrMap;		// Devolvemos la matriz.
 }

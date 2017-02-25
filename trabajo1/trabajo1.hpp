@@ -14,12 +14,17 @@ using namespace std;
 
 VideoCapture TheVideoCapturer;		// Objeto para la cámara.
 Mat bgrMap;		// Matriz de lo obtenido de la cámara.
-bool primero = true;		// Booleano para indicar que es la primera vez que se entra.
+bool primeroRed = true;		// Booleano para indicar que es la primera vez que se entra.
+bool primeroCoj = true;		// Booleano para indicar que es la primera vez que se entra.
+bool primeroBar = true;		// Booleano para indicar que es la primera vez que se entra.
 int numColores;		// Número de colores para la imagen.
+int coeficiente;	// Coeficiente de distorsión de la imagen.
 
 int mostrarMenu();		// Función que muestra el menú por pantalla.
 Mat mejorarContraste(Mat);	// Función que mejora el contraste.
 Mat cambiarColor(Mat, int);		// Método que cambia el color.
 Mat reducirColores(Mat);	// Método que reduce el número de colores.
+Mat distorsionCojin(Mat);	// Función que aplica distorsión de cojín.
+Mat distorsionBarril(Mat);	// Función que aplica la distorsión de barril.
 
 #endif
