@@ -14,6 +14,9 @@ int main(int argc, char *argv[]) {
 		std::cerr<<"Could not open video"<<std::endl;
 		return -1;
 	}
+	TheVideoCapturer.grab();
+	TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
+	calcularCoordenadas();					//Calculamos las coordenadas.
 
 	while(key != 27 && TheVideoCapturer.grab()) {		// Mientras sea distinto de ESC...
 
@@ -260,24 +263,26 @@ Mat distorsionCojin(Mat bgrMap){
 		cout << "Escriba coeficiente de distorsión (positivo): ";
 		cin >> coeficiente;		// Se lee coeficiente.
 		primeroCoj = false;
-	}
+		// Variables para realizar cambio de coordenadas para distorsion de cojin.
+		double Cy = (double)bgrMap.cols/2;
+		double Cx = (double)bgrMap.rows/2;
+		coordXCojin.create(bgrMap.size(), CV_32FC1);
+		coordYCojin.create(bgrMap.size(), CV_32FC1);
 
-	// Variables para realizar cambio de coordenadas.
-	double Cy = (double)bgrMap.cols/2;
-	double Cx = (double)bgrMap.rows/2;
-	coordX.create(bgrMap.size(), CV_32FC1);
-	coordY.create(bgrMap.size(), CV_32FC1);
-
-	for (int x=0; x<coordX.rows; x++) {		// Se recorren las filas.
-		for (int y=0; y<coordY.cols; y++) {		// Se recorren las columnas.
-			// Se calculan nuevas coordenadas y se guardan.
-			double r2 = (x-Cx)*(x-Cx) + (y-Cy)*(y-Cy);
-			coordX.at<float>(x,y) = (double) ((y-Cy)/(1 + double(coeficiente/1000000.0)*r2)+Cy);
-			coordY.at<float>(x,y) = (double) ((x-Cx)/(1 + double(coeficiente/1000000.0)*r2)+Cx);
+		for (int x=0; x<coordXCojin.rows; x++) {		// Se recorren las filas.
+			for (int y=0; y<coordYCojin.cols; y++) {		// Se recorren las columnas.
+				// Se calculan nuevas coordenadas y se guardan.
+				double r2 = (x-Cx)*(x-Cx) + (y-Cy)*(y-Cy);
+				coordXCojin.at<float>(x,y) =
+						(double) ((y-Cy)/(1 + double(coeficiente/1000000.0)*r2)+Cy);
+				coordYCojin.at<float>(x,y) =
+						(double) ((x-Cx)/(1 + double(coeficiente/1000000.0)*r2)+Cx);
+			}
 		}
 	}
+
 	// Se aplican las nuevas coordenadas a la imagen.
-	remap(bgrMap, bgrMap, coordX, coordY, CV_INTER_LINEAR);
+	remap(bgrMap, bgrMap, coordXCojin, coordYCojin, CV_INTER_LINEAR);
 
 	return bgrMap;		// Devolvemos la matriz.
 }
@@ -291,24 +296,28 @@ Mat distorsionBarril(Mat bgrMap){
 		cout << "Escriba coeficiente de distorsión (positivo): ";
 		cin >> coeficiente;		// Se lee coeficiente.
 		primeroBar = false;
-	}
+		// Variables para realizar cambio de coordenadas para distorsion de cojin.
+		double Cy = (double)bgrMap.cols/2;
+		double Cx = (double)bgrMap.rows/2;
+		// Variables para realizar cambio de coordenadas para la distorsion de barril.
+		coordXBarril.create(bgrMap.size(), CV_32FC1);
+		coordYBarril.create(bgrMap.size(), CV_32FC1);
 
-	// Variables para realizar cambio de coordenadas.
-	double Cy = (double)bgrMap.cols/2;
-	double Cx = (double)bgrMap.rows/2;
-	coordX.create(bgrMap.size(), CV_32FC1);
-	coordY.create(bgrMap.size(), CV_32FC1);
-
-	for (int x=0; x<coordX.rows; x++) {		// Se recorren las filas.
-		for (int y=0; y<coordY.cols; y++) {		// Se recorren las columnas.
-			// Se calculan nuevas coordenadas y se guardan.
-			double r2 = (x-Cx)*(x-Cx) + (y-Cy)*(y-Cy);
-			coordX.at<float>(x,y) = (double) ((y-Cy)/(1 + double(-coeficiente/1000000.0)*r2)+Cy);
-			coordY.at<float>(x,y) = (double) ((x-Cx)/(1 + double(-coeficiente/1000000.0)*r2)+Cx);
+		for (int x=0; x<coordXBarril.rows; x++) {		// Se recorren las filas.
+			for (int y=0; y<coordYBarril.cols; y++) {		// Se recorren las columnas.
+				// Se calculan nuevas coordenadas y se guardan.
+				double r2 = (x-Cx)*(x-Cx) + (y-Cy)*(y-Cy);
+				coordXBarril.at<float>(x,y) =
+						(double) ((y-Cy)/(1 + double(-coeficiente/1000000.0)*r2)+Cy);
+				coordYBarril.at<float>(x,y) =
+						(double) ((x-Cx)/(1 + double(-coeficiente/1000000.0)*r2)+Cx);
+				}
 		}
 	}
+
+
 	// Se aplican las nuevas coordenadas a la imagen.
-	remap(bgrMap, bgrMap, coordX, coordY, CV_INTER_LINEAR);
+	remap(bgrMap, bgrMap, coordXBarril, coordYBarril, CV_INTER_LINEAR);
 
 	return bgrMap;		// Devolvemos la matriz.
 }
@@ -318,19 +327,8 @@ Mat distorsionBarril(Mat bgrMap){
  */
 Mat invertir(Mat bgrMap){
 
-	// Se crean las matrices para las nuevas coordenadas.
-	coordX.create(bgrMap.size(), CV_32FC1);
-	coordY.create(bgrMap.size(), CV_32FC1);
-
-	for (int x=0; x<coordX.rows; x++) {		// Se recorren las filas.
-		for (int y=0; y<coordY.cols; y++) {		// Se recorren las columnas.
-			// Se calculan nuevas coordenadas y se guardan.
-			coordX.at<float>(x,y) = bgrMap.cols-y;
-			coordY.at<float>(x,y) = x;
-		}
-	}
 	// Se aplican las nuevas coordenadas.
-	remap(bgrMap, bgrMap, coordX, coordY, CV_INTER_LINEAR);
+	remap(bgrMap, bgrMap, coordXInv, coordYInv, CV_INTER_LINEAR);
 
 	return bgrMap;		// Devolvemos la matriz.
 }
@@ -340,19 +338,9 @@ Mat invertir(Mat bgrMap){
  */
 Mat rotar(Mat bgrMap){
 
-	// Se crean las matrices para las nuevas coordenadas.
-	coordX.create(bgrMap.size(), CV_32FC1);
-	coordY.create(bgrMap.size(), CV_32FC1);
 
-	for (int x=0; x<coordX.rows; x++) {		// Se recorren las filas.
-		for (int y=0; y<coordY.cols; y++) {		// Se recorren las columnas.
-			// Se calculan nuevas coordenadas y se guardan.
-			coordX.at<float>(x,y) = y;
-			coordY.at<float>(x,y) = bgrMap.rows-x;
-		}
-	}
 	// Se aplican las nuevas coordenadas.
-	remap(bgrMap, bgrMap, coordX, coordY, CV_INTER_LINEAR);
+	remap(bgrMap, bgrMap, coordXRot, coordYRot, CV_INTER_LINEAR);
 
 	return bgrMap;		// Devolvemos la matriz.
 }
@@ -366,7 +354,7 @@ Mat simetrica(Mat bgrMap){
 	if(primeroSim){		// Si es la primera iteración se pregunta valor del eje.
 		cout << "Escriba el eje de simetría (X o Y): ";
 		cin >> eje;		// Se lee el eje.
-		for (int i=0; i < eje.size(); i++)		// Se pasa a minúsculas.
+		for (uint i=0; i < eje.size(); i++)		// Se pasa a minúsculas.
 			eje.at(i) = tolower(eje.at(i));
 		primeroSim = false;
 	}
@@ -374,40 +362,18 @@ Mat simetrica(Mat bgrMap){
 	if(eje.compare("x") == 0){	// Eje de simetría X.
 		// Se redimensiona la imagen.
 		resize(bgrMap,redimen,Size(bgrMap.cols,bgrMap.rows/2));
+		// Se aplican las nuevas coordenadas.
+		remap(redimen, bgrMap, coordXSimX, coordYSimX, CV_INTER_LINEAR);
 
-		// Se crean las matrices para las nuevas coordenadas.
-		coordX.create(bgrMap.size(), CV_32FC1);
-		coordY.create(bgrMap.size(), CV_32FC1);
 
-		for (int x=0; x<coordX.rows/2; x++) {		// Se recorren las filas.
-			for (int y=0; y<coordY.cols; y++) {		// Se recorren las columnas.
-				// Se calculan nuevas coordenadas y se guardan.
-				coordX.at<float>(x,y) = y;
-				coordY.at<float>(x,y) = x;
-				coordX.at<float>(x+coordX.rows/2,y) = y;
-				coordY.at<float>(x+coordX.rows/2,y) = coordY.rows/2-x;
-			}
-		}
 	} else{			// Eje de simetría Y.
 		// Se redimensiona la imagen.
 		resize(bgrMap,redimen,Size(bgrMap.cols/2,bgrMap.rows));
 
-		// Se crean las matrices para las nuevas coordenadas.
-		coordX.create(bgrMap.size(), CV_32FC1);
-		coordY.create(bgrMap.size(), CV_32FC1);
 
-		for (int x=0; x<coordX.rows; x++) {		// Se recorren las filas.
-			for (int y=0; y<coordY.cols/2; y++) {		// Se recorren las columnas.
-				// Se calculan nuevas coordenadas y se guardan.
-				coordX.at<float>(x,y) = y;
-				coordY.at<float>(x,y) = x;
-				coordX.at<float>(x,y+coordX.cols/2) = coordX.cols/2-y;
-				coordY.at<float>(x,y+coordX.cols/2) = x;
-			}
-		}
+		// Se aplican las nuevas coordenadas.
+		remap(redimen, bgrMap, coordXSimY, coordYSimY, CV_INTER_LINEAR);
 	}
-	// Se aplican las nuevas coordenadas.
-	remap(redimen, bgrMap, coordX, coordY, CV_INTER_LINEAR);
 
 	return bgrMap;	// Devolvemos la matriz.
 }
@@ -438,4 +404,60 @@ Mat binaria(Mat bgrMap){
 
 	threshold(bgrMap, bgrMap, thresVal, maxBinaria, THRESH_BINARY);
 	return bgrMap;		// Se devuelve la matriz.
+}
+
+/*
+ * Calcula las coordenadas que se utilizaran en los diferentes modos de la imagen.
+ */
+void calcularCoordenadas() {
+
+	// Se crean las matrices para las nuevas coordenadas para invertir la imagen.
+	coordXInv.create(bgrMap.size(), CV_32FC1);
+	coordYInv.create(bgrMap.size(), CV_32FC1);
+
+	for (int x=0; x<coordXInv.rows; x++) {		// Se recorren las filas.
+		for (int y=0; y<coordYInv.cols; y++) {		// Se recorren las columnas.
+			// Se calculan nuevas coordenadas y se guardan.
+			coordXInv.at<float>(x,y) = bgrMap.cols-y;
+			coordYInv.at<float>(x,y) = x;
+		}
+	}
+
+	// Se crean las matrices para las nuevas coordenadas para rotar la imagen.
+	coordXRot.create(bgrMap.size(), CV_32FC1);
+	coordYRot.create(bgrMap.size(), CV_32FC1);
+
+	for (int x=0; x<coordXRot.rows; x++) {		// Se recorren las filas.
+		for (int y=0; y<coordYRot.cols; y++) {		// Se recorren las columnas.
+			// Se calculan nuevas coordenadas y se guardan.
+			coordXRot.at<float>(x,y) = y;
+			coordYRot.at<float>(x,y) = bgrMap.rows-x;
+		}
+	}
+
+	// Se crean las matrices para las nuevas coordenadas Para simetria en eje X.
+	coordXSimX.create(bgrMap.size(), CV_32FC1);
+	coordYSimX.create(bgrMap.size(), CV_32FC1);
+	for (int x=0; x<coordXSimX.rows/2; x++) {		// Se recorren las filas.
+		for (int y=0; y<coordYSimX.cols; y++) {		// Se recorren las columnas.
+			// Se calculan nuevas coordenadas y se guardan.
+			coordXSimX.at<float>(x,y) = y;
+			coordYSimX.at<float>(x,y) = x;
+			coordXSimX.at<float>(x+coordXSimX.rows/2,y) = y;
+			coordYSimX.at<float>(x+coordXSimX.rows/2,y) = coordYSimX.rows/2-x;
+		}
+	}
+
+	// Se crean las matrices para las nuevas coordenadas para simetria en eje y.
+	coordXSimY.create(bgrMap.size(), CV_32FC1);
+	coordYSimY.create(bgrMap.size(), CV_32FC1);
+	for (int x=0; x<coordXSimY.rows; x++) {		// Se recorren las filas.
+		for (int y=0; y<coordYSimY.cols/2; y++) {		// Se recorren las columnas.
+			// Se calculan nuevas coordenadas y se guardan.
+			coordXSimY.at<float>(x,y) = y;
+			coordYSimY.at<float>(x,y) = x;
+			coordXSimY.at<float>(x,y+coordXSimY.cols/2) = coordXSimY.cols/2-y;
+			coordYSimY.at<float>(x,y+coordXSimY.cols/2) = x;
+		}
+	}
 }

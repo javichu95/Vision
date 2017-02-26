@@ -22,7 +22,9 @@ bool primeroBin = true;		// Booleano para indicar que es la primera vez que se e
 bool primeroSim = true;		// Booleano para indicar que es la primera vez que se entra
 int numColores;		// Número de colores para la imagen.
 int coeficiente;	// Coeficiente de distorsión de la imagen.
-Mat coordX, coordY;		// Matrices para realizar el remap.
+Mat coordXCojin, coordYCojin, coordXBarril, coordYBarril,
+		coordXInv, coordYInv, coordXRot, coordYRot,
+		coordXSimX, coordYSimX, coordXSimY, coordYSimY;		// Matrices para realizar el remap.
 double maxBinaria = 255.0; 	// Valor máximo de una imagen binaria.
 double thresVal = 0.0;	// Valor mínimo de una imagen binaria.
 string eje;			// Variable para el eje.
@@ -38,5 +40,6 @@ Mat rotar(Mat);			// Función que rota la imagen 180 grados.
 Mat escalaGrises(Mat);		// Función que convierte la imagen a escala de grises.
 Mat simetrica(Mat);		// Función que hace la simétrica de la imagen respecto a un eje.
 Mat binaria(Mat);		// Función que convierte la imagen a binaria.
+void calcularCoordenadas();
 
 #endif
