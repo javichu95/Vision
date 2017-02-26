@@ -23,48 +23,87 @@ int main(int argc, char *argv[]) {
 		// Comprobamos si es opción válida para cambiar de vista.
 		if(key == 99 || key == 114 || key == 97 || key == 118
 				|| key == 109 || key == 98 || key == 100
-				|| key == 13){
+				|| key == 13 || key == 113 || key == 105
+				|| key == 103 || key == 115 || key == 116){
 			keyAnterior = key;
 		}
 		switch(keyAnterior){
 		case 99:		// Se aplica contraste.
 			// Se inicializan las variables.
 			primeroRed = true; primeroCoj = true; primeroBar = true;
+			primeroBin = true; primeroSim = true;
 			bgrMap = mejorarContraste(bgrMap);
 			break;
 		case 114:	// Se cambia el color de la piel a rojo.
 			// Se inicializan las variables.
 			primeroRed = true; primeroCoj = true; primeroBar = true;
+			primeroBin = true; primeroSim = true;
 			bgrMap = cambiarColor(bgrMap,2);
 			break;
 		case 97:	// Se cambia el color de la piel a azul.
 			// Se inicializan las variables.
 			primeroRed = true; primeroCoj = true; primeroBar = true;
+			primeroBin = true; primeroSim = true;
 			bgrMap = cambiarColor(bgrMap,1);
 			break;
 		case 118:	// Se cambia el color de la piel a verde.
 			// Se inicializan las variables.
 			primeroRed = true; primeroCoj = true; primeroBar = true;
+			primeroBin = true; primeroSim = true;
 			bgrMap = cambiarColor(bgrMap,0);
 			break;
 		case 109:	// Se reduce el número de colores.
 			// Se inicializan las variables.
-			primeroCoj = true;	primeroBar = true;
+			primeroCoj = true;	primeroBar = true; primeroBin = true;
+			primeroSim = true;
 			bgrMap = reducirColores(bgrMap);
 			break;
 		case 98:	// Se aplica distorsión de barril.
 			// Se inicializan las variables.
-			primeroRed = true; primeroCoj = true;
-			//bgrMap = distorsionBarril(bgrMap);
+			primeroRed = true; primeroCoj = true; primeroBin = true;
+			primeroSim = true;
+			bgrMap = distorsionBarril(bgrMap);
 			break;
 		case 100:	// Se aplica distorsión de cojín.
 			// Se inicializan las variables.
-			primeroRed = true; primeroBar = true;
+			primeroRed = true; primeroBar = true; primeroBin = true;
+			primeroSim = true;
 			bgrMap = distorsionCojin(bgrMap);
+			break;
+		case 113:		// Se rota la imagen.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true; primeroBar = true;
+			primeroBin = true; primeroSim = true;
+			bgrMap = rotar(bgrMap);
+			break;
+		case 105:		// Se invierte la imagen 180º.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true; primeroBar = true;
+			primeroBin = true; primeroSim = true;
+			bgrMap = invertir(bgrMap);
+			break;
+		case 103:		// Se convierte a escala de grises.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true; primeroBar = true;
+			primeroBin = true; primeroSim = true;
+			bgrMap = escalaGrises(bgrMap);
+			break;
+		case 115:		// Se convierte a la simétrica en torno a un eje.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true; primeroBar = true;
+			primeroBin = true;
+			bgrMap = simetrica(bgrMap);
+			break;
+		case 116:	// Se convierte a imagen binaria.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true; primeroBar = true;
+			primeroSim = true;
+			bgrMap = binaria(bgrMap);
 			break;
 		case 13:		// Se vuelve a poner normal.
 			// Se inicializan las variables.
 			primeroRed = true; primeroCoj = true;	primeroBar = true;
+			primeroBin = true; primeroSim = true;
 			TheVideoCapturer.retrieve(bgrMap);
 			break;
 		default:
@@ -90,7 +129,12 @@ int mostrarMenu(){
 	cout << "| 5.- Pulsa 'm' para reducir el número de colores.       |" << endl;
 	cout << "| 6.- Pulsa 'b' para aplicar distorsion de barril.       |" << endl;
 	cout << "| 7.- Pulsa 'd' para aplicar distorsion de cojin.        |" << endl;
-	cout << "| 8.- Pulsa 'esc' para terminar.                         |" << endl;
+	cout << "| 8.- Pulsa 'i' para invertir la imagen.                 |" << endl;
+	cout << "| 9.- Pulsa 'q' para rotar la imagen (180º).             |" << endl;
+	cout << "| 10.- Pulsa 'g' para pasar a escala de grises.          |" << endl;
+	cout << "| 11.- Pulsa 's' para doblar la imagen en torno a un eje.|" << endl;
+	cout << "| 12.- Pulsa 't' para convertir la imagen a binaria.     |" << endl;
+	cout << "| 13.- Pulsa 'esc' para terminar.                        |" << endl;
 	cout << "|--------------------------------------------------------|" << endl << endl;
 
 	return 0;
@@ -122,6 +166,12 @@ Mat cambiarColor(Mat bgrMap, int color){
 	Mat hsv;		// Matriz para la nueva representación del color.
 	cvtColor(bgrMap, hsv,CV_BGR2HSV);		// Cambiamos a hsv.
 
+
+	/*
+	 *
+	 * REVISAR CÖDIGO DE COLORES (hay un error)
+	 *
+	 */
 	if(color == 0){		// Color azul.
 		for (int i=0; i<hsv.rows; i++) {		// Recorremos las filas.
 			uchar* data= hsv.ptr<uchar>(i); 		// Obtenemos la fila.
@@ -181,9 +231,7 @@ Mat reducirColores(Mat bgrMap){
 	}
 
 	//Se definen los argumentos para realizar k-means.
-	int intentos = 1;
-	Mat centroides;
-	Mat etiq;
+	int intentos = 1; Mat centroides; Mat etiq;
 
 	// Se utiliza k-means para reducir el número de colores mediante clustering.
 	kmeans(imagenVector, numColores, etiq,
@@ -208,26 +256,186 @@ Mat reducirColores(Mat bgrMap){
  */
 Mat distorsionCojin(Mat bgrMap){
 
-	if(primeroCoj){		// Si es la primera iteración se pregunta número.
+	if(primeroCoj){		// Si es la primera iteración se pregunta coeficiente.
 		cout << "Escriba coeficiente de distorsión (positivo): ";
-		cin >> coeficiente;
+		cin >> coeficiente;		// Se lee coeficiente.
 		primeroCoj = false;
 	}
 
-	Mat map_x, map_y, output;
+	// Variables para realizar cambio de coordenadas.
 	double Cy = (double)bgrMap.cols/2;
 	double Cx = (double)bgrMap.rows/2;
-	map_x.create(bgrMap.size(), CV_32FC1);
-	map_y.create(bgrMap.size(), CV_32FC1);
+	coordX.create(bgrMap.size(), CV_32FC1);
+	coordY.create(bgrMap.size(), CV_32FC1);
 
-	for (int x=0; x<map_x.rows; x++) {
-		for (int y=0; y<map_y.cols; y++) {
+	for (int x=0; x<coordX.rows; x++) {		// Se recorren las filas.
+		for (int y=0; y<coordY.cols; y++) {		// Se recorren las columnas.
+			// Se calculan nuevas coordenadas y se guardan.
 			double r2 = (x-Cx)*(x-Cx) + (y-Cy)*(y-Cy);
-			map_x.at<float>(x,y) = (double) ((y-Cy)/(1 + double(coeficiente/1000000.0)*r2)+Cy); // se suma para obtener la posicion absoluta
-			map_y.at<float>(x,y) = (double) ((x-Cx)/(1 + double(coeficiente/1000000.0)*r2)+Cx); // la posicion relativa del punto al centro
+			coordX.at<float>(x,y) = (double) ((y-Cy)/(1 + double(coeficiente/1000000.0)*r2)+Cy);
+			coordY.at<float>(x,y) = (double) ((x-Cx)/(1 + double(coeficiente/1000000.0)*r2)+Cx);
 		}
 	}
-	remap(bgrMap, bgrMap, map_x, map_y, CV_INTER_LINEAR);
+	// Se aplican las nuevas coordenadas a la imagen.
+	remap(bgrMap, bgrMap, coordX, coordY, CV_INTER_LINEAR);
 
 	return bgrMap;		// Devolvemos la matriz.
+}
+
+/*
+ * Función que aplica una distorsión de barríl a la imagen.
+ */
+Mat distorsionBarril(Mat bgrMap){
+
+	if(primeroBar){		// Si es la primera iteración se pregunta coeficiente.
+		cout << "Escriba coeficiente de distorsión (positivo): ";
+		cin >> coeficiente;		// Se lee coeficiente.
+		primeroBar = false;
+	}
+
+	// Variables para realizar cambio de coordenadas.
+	double Cy = (double)bgrMap.cols/2;
+	double Cx = (double)bgrMap.rows/2;
+	coordX.create(bgrMap.size(), CV_32FC1);
+	coordY.create(bgrMap.size(), CV_32FC1);
+
+	for (int x=0; x<coordX.rows; x++) {		// Se recorren las filas.
+		for (int y=0; y<coordY.cols; y++) {		// Se recorren las columnas.
+			// Se calculan nuevas coordenadas y se guardan.
+			double r2 = (x-Cx)*(x-Cx) + (y-Cy)*(y-Cy);
+			coordX.at<float>(x,y) = (double) ((y-Cy)/(1 + double(-coeficiente/1000000.0)*r2)+Cy);
+			coordY.at<float>(x,y) = (double) ((x-Cx)/(1 + double(-coeficiente/1000000.0)*r2)+Cx);
+		}
+	}
+	// Se aplican las nuevas coordenadas a la imagen.
+	remap(bgrMap, bgrMap, coordX, coordY, CV_INTER_LINEAR);
+
+	return bgrMap;		// Devolvemos la matriz.
+}
+
+/*
+ * Función que invierte la imagen captada por la cámara.
+ */
+Mat invertir(Mat bgrMap){
+
+	// Se crean las matrices para las nuevas coordenadas.
+	coordX.create(bgrMap.size(), CV_32FC1);
+	coordY.create(bgrMap.size(), CV_32FC1);
+
+	for (int x=0; x<coordX.rows; x++) {		// Se recorren las filas.
+		for (int y=0; y<coordY.cols; y++) {		// Se recorren las columnas.
+			// Se calculan nuevas coordenadas y se guardan.
+			coordX.at<float>(x,y) = bgrMap.cols-y;
+			coordY.at<float>(x,y) = x;
+		}
+	}
+	// Se aplican las nuevas coordenadas.
+	remap(bgrMap, bgrMap, coordX, coordY, CV_INTER_LINEAR);
+
+	return bgrMap;		// Devolvemos la matriz.
+}
+
+/*
+ * Función que da la vuelta a la imagen captada por la cámara (rota 180º).
+ */
+Mat rotar(Mat bgrMap){
+
+	// Se crean las matrices para las nuevas coordenadas.
+	coordX.create(bgrMap.size(), CV_32FC1);
+	coordY.create(bgrMap.size(), CV_32FC1);
+
+	for (int x=0; x<coordX.rows; x++) {		// Se recorren las filas.
+		for (int y=0; y<coordY.cols; y++) {		// Se recorren las columnas.
+			// Se calculan nuevas coordenadas y se guardan.
+			coordX.at<float>(x,y) = y;
+			coordY.at<float>(x,y) = bgrMap.rows-x;
+		}
+	}
+	// Se aplican las nuevas coordenadas.
+	remap(bgrMap, bgrMap, coordX, coordY, CV_INTER_LINEAR);
+
+	return bgrMap;		// Devolvemos la matriz.
+}
+
+/*
+ * Función que dobla la imagen respecto al eje X o Y (simétrica).
+ */
+Mat simetrica(Mat bgrMap){
+
+	Mat redimen;		// Variable para la matriz redimensionada.
+	if(primeroSim){		// Si es la primera iteración se pregunta valor del eje.
+		cout << "Escriba el eje de simetría (X o Y): ";
+		cin >> eje;		// Se lee el eje.
+		for (int i=0; i < eje.size(); i++)		// Se pasa a minúsculas.
+			eje.at(i) = tolower(eje.at(i));
+		primeroSim = false;
+	}
+
+	if(eje.compare("x") == 0){	// Eje de simetría X.
+		// Se redimensiona la imagen.
+		resize(bgrMap,redimen,Size(bgrMap.cols,bgrMap.rows/2));
+
+		// Se crean las matrices para las nuevas coordenadas.
+		coordX.create(bgrMap.size(), CV_32FC1);
+		coordY.create(bgrMap.size(), CV_32FC1);
+
+		for (int x=0; x<coordX.rows/2; x++) {		// Se recorren las filas.
+			for (int y=0; y<coordY.cols; y++) {		// Se recorren las columnas.
+				// Se calculan nuevas coordenadas y se guardan.
+				coordX.at<float>(x,y) = y;
+				coordY.at<float>(x,y) = x;
+				coordX.at<float>(x+coordX.rows/2,y) = y;
+				coordY.at<float>(x+coordX.rows/2,y) = coordY.rows/2-x;
+			}
+		}
+	} else{			// Eje de simetría Y.
+		// Se redimensiona la imagen.
+		resize(bgrMap,redimen,Size(bgrMap.cols/2,bgrMap.rows));
+
+		// Se crean las matrices para las nuevas coordenadas.
+		coordX.create(bgrMap.size(), CV_32FC1);
+		coordY.create(bgrMap.size(), CV_32FC1);
+
+		for (int x=0; x<coordX.rows; x++) {		// Se recorren las filas.
+			for (int y=0; y<coordY.cols/2; y++) {		// Se recorren las columnas.
+				// Se calculan nuevas coordenadas y se guardan.
+				coordX.at<float>(x,y) = y;
+				coordY.at<float>(x,y) = x;
+				coordX.at<float>(x,y+coordX.cols/2) = coordX.cols/2-y;
+				coordY.at<float>(x,y+coordX.cols/2) = x;
+			}
+		}
+	}
+	// Se aplican las nuevas coordenadas.
+	remap(redimen, bgrMap, coordX, coordY, CV_INTER_LINEAR);
+
+	return bgrMap;	// Devolvemos la matriz.
+}
+
+/*
+ * Función que pasa la imagen a escala de grises.
+ */
+Mat escalaGrises(Mat bgrMap){
+
+	// Se pasa la imagen a escala de grises.
+	cvtColor(bgrMap,bgrMap,CV_RGB2GRAY);
+
+	return bgrMap;		// Devolvemos la matriz.
+}
+
+/*
+ * Función que pasa una imagen a binaria.
+ */
+Mat binaria(Mat bgrMap){
+
+	// Se pasa la imagen a escala de grises.
+	cvtColor(bgrMap,bgrMap,CV_RGB2GRAY);
+	if(primeroBin){		// Si es la primera iteración se pregunta valor de threshold.
+		cout << "Escriba valor de threshold: ";
+		cin >> thresVal;		// Se lee coeficiente.
+		primeroBin = false;
+	}
+
+	threshold(bgrMap, bgrMap, thresVal, maxBinaria, THRESH_BINARY);
+	return bgrMap;		// Se devuelve la matriz.
 }
