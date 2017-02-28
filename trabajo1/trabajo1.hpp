@@ -22,14 +22,16 @@ bool primeroBin = true;		// Booleano para indicar que es la primera vez que se e
 bool primeroSim = true;		// Booleano para indicar que es la primera vez que se entra
 int numColores;		// Número de colores para la imagen.
 int coeficiente;	// Coeficiente de distorsión de la imagen.
+// Matrices para realizar el remap.
 Mat coordXCojin, coordYCojin, coordXBarril, coordYBarril,
 		coordXInv, coordYInv, coordXRot, coordYRot,
-		coordXSimX, coordYSimX, coordXSimY, coordYSimY;		// Matrices para realizar el remap.
+		coordXSimX, coordYSimX, coordXSimY, coordYSimY;
 double maxBinaria = 255.0; 	// Valor máximo de una imagen binaria.
 double thresVal = 0.0;	// Valor mínimo de una imagen binaria.
 string eje;			// Variable para el eje.
 
 int mostrarMenu();		// Función que muestra el menú por pantalla.
+Mat ecualizar(Mat);	// Función que mejora el contraste ecualizando el histograma.
 Mat mejorarContraste(Mat);	// Función que mejora el contraste.
 Mat cambiarColor(Mat, int);		// Método que cambia el color.
 Mat reducirColores(Mat);	// Método que reduce el número de colores.

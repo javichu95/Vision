@@ -14,11 +14,11 @@ int main(int argc, char *argv[]) {
 		std::cerr<<"Could not open video"<<std::endl;
 		return -1;
 	}
-	TheVideoCapturer.grab();
+	//TheVideoCapturer.grab();
 	TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
 	calcularCoordenadas();					//Calculamos las coordenadas.
 
-	VideoWriter wtr("trabajo.avi", CV_FOURCC('D','I','V','X'), 30, Size(640,480));
+	//VideoWriter wtr("trabajo.avi", CV_FOURCC('D','I','V','X'), 30, Size(640,480));
 	while(key != 27 && TheVideoCapturer.grab()) {		// Mientras sea distinto de ESC...
 
 		TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
@@ -28,11 +28,18 @@ int main(int argc, char *argv[]) {
 		if(key == 99 || key == 114 || key == 97 || key == 118
 				|| key == 109 || key == 98 || key == 100
 				|| key == 13 || key == 113 || key == 105
-				|| key == 103 || key == 115 || key == 116){
+				|| key == 103 || key == 115 || key == 116
+				|| key == 101){
 			keyAnterior = key;
 		}
 		switch(keyAnterior){
 		case 99:		// Se aplica contraste.
+			// Se inicializan las variables.
+			primeroRed = true; primeroCoj = true; primeroBar = true;
+			primeroBin = true; primeroSim = true;
+			bgrMap = ecualizar(bgrMap);
+			break;
+		case 101:		// Se aplica contraste.
 			// Se inicializan las variables.
 			primeroRed = true; primeroCoj = true; primeroBar = true;
 			primeroBin = true; primeroSim = true;
@@ -114,9 +121,9 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		imshow("BGR camara", bgrMap);	// Se muestra lo visto por la cámara.
-		wtr.write(bgrMap);
+		//wtr.write(bgrMap);
 	}
-	wtr.release();
+	//wtr.release();
 }
 
 /*
@@ -128,28 +135,30 @@ int mostrarMenu(){
 	cout << "|--------------------------------------------------------|" << endl;
 	cout << "|                  MENU DE OPERACIONES                   |" << endl;
 	cout << "|--------------------------------------------------------|" << endl;
-	cout << "| 1.- Pulsa 'c' para aplicar contraste a la imagen.      |" << endl;
-	cout << "| 2.- Pulsa 'r' para cambiar el color de la piel a rojo. |" << endl;
-	cout << "| 3.- Pulsa 'a' para cambiar el color de la piel a azul. |" << endl;
-	cout << "| 4.- Pulsa 'v' para cambiar el color de la piel a verde.|" << endl;
-	cout << "| 5.- Pulsa 'm' para reducir el número de colores.       |" << endl;
-	cout << "| 6.- Pulsa 'b' para aplicar distorsion de barril.       |" << endl;
-	cout << "| 7.- Pulsa 'd' para aplicar distorsion de cojin.        |" << endl;
-	cout << "| 8.- Pulsa 'i' para invertir la imagen.                 |" << endl;
-	cout << "| 9.- Pulsa 'q' para rotar la imagen (180º).             |" << endl;
-	cout << "| 10.- Pulsa 'g' para pasar a escala de grises.          |" << endl;
-	cout << "| 11.- Pulsa 's' para doblar la imagen en torno a un eje.|" << endl;
-	cout << "| 12.- Pulsa 't' para convertir la imagen a binaria.     |" << endl;
-	cout << "| 13.- Pulsa 'esc' para terminar.                        |" << endl;
+	cout << "| 1.- Pulsa 'c' para ecualizar el histograma.            |" << endl;
+	cout << "| 2.- Pulsa 'e' para mejorar el contraste.               |" << endl;
+	cout << "| 3.- Pulsa 'r' para cambiar el color de la piel a rojo. |" << endl;
+	cout << "| 4.- Pulsa 'a' para cambiar el color de la piel a azul. |" << endl;
+	cout << "| 5.- Pulsa 'v' para cambiar el color de la piel a verde.|" << endl;
+	cout << "| 6.- Pulsa 'm' para reducir el número de colores.       |" << endl;
+	cout << "| 7.- Pulsa 'b' para aplicar distorsion de barril.       |" << endl;
+	cout << "| 8.- Pulsa 'd' para aplicar distorsion de cojin.        |" << endl;
+	cout << "| 9.- Pulsa 'i' para invertir la imagen.                 |" << endl;
+	cout << "| 10.- Pulsa 'q' para rotar la imagen (180º).            |" << endl;
+	cout << "| 11.- Pulsa 'g' para pasar a escala de grises.          |" << endl;
+	cout << "| 12.- Pulsa 's' para doblar la imagen en torno a un eje.|" << endl;
+	cout << "| 13.- Pulsa 't' para convertir la imagen a binaria.     |" << endl;
+	cout << "| 14.- Pulsa 'esc' para terminar.                        |" << endl;
 	cout << "|--------------------------------------------------------|" << endl << endl;
 
 	return 0;
 }
 
 /*
- * Función que mejora el constraste de la imagen.
+ * Función que mejora el constraste de la imagen ecualizando el
+ * histograma.
 */
-Mat mejorarContraste(Mat bgrMap){
+Mat ecualizar(Mat bgrMap){
 
 	vector<Mat> canales;			// Vector para los tres canales.
 	split(bgrMap, canales);		// Separamos los tres canales.
@@ -165,6 +174,17 @@ Mat mejorarContraste(Mat bgrMap){
 }
 
 /*
+ * Función que mejora el constraste de la imagen.
+*/
+Mat mejorarContraste(Mat bgrMap){
+
+	// Aumentamos el contraste de la imagen por un escalar.
+	bgrMap.convertTo(bgrMap, -1, 2, 0);
+
+	return bgrMap;		// Devolvemos la matriz.
+}
+
+/*
  * Función que cambia el color de la piel.
  */
 Mat cambiarColor(Mat bgrMap, int color){
@@ -172,29 +192,23 @@ Mat cambiarColor(Mat bgrMap, int color){
 	Mat hsv;		// Matriz para la nueva representación del color.
 	cvtColor(bgrMap, hsv,CV_BGR2HSV);		// Cambiamos a hsv.
 
-
-	/*
-	 *
-	 * REVISAR CÖDIGO DE COLORES (hay un error)
-	 *
-	 */
-	if(color == 0){		// Color azul.
+	if(color == 0){		// Color verde.
 		for (int i=0; i<hsv.rows; i++) {		// Recorremos las filas.
 			uchar* data= hsv.ptr<uchar>(i); 		// Obtenemos la fila.
 			for (int j=0; j<hsv.cols*hsv.channels(); j = j +3) {
 				// Miramos si está en el rango de la piel.
 				if((data[j] <= 25) || (data[j] >= 162 && data[j] <= 180)) {
-					data[j] = 60;		// Lo ponemos a azul.
+					data[j] = 60;		// Lo ponemos a verde.
 				}
 			}
 		}
-	} else if(color == 1){		// Color verde.
+	} else if(color == 1){		// Color azul.
 		for (int i=0; i<hsv.rows; i++) {	// Recorremos las filas.
 			uchar* data= hsv.ptr<uchar>(i); // Obtenemos la fila.
 			for (int j=0; j<hsv.cols*hsv.channels(); j = j +3) {
 				// Miramos si está en el rango de la piel.
 				if((data[j] <= 25) || (data[j] >= 162 && data[j] <= 180)) {
-					data[j] = 120;		// Lo ponemos a verde.
+					data[j] = 120;		// Lo ponemos a azul.
 				}
 			}
 		}
@@ -236,7 +250,7 @@ Mat reducirColores(Mat bgrMap){
 		}
 	}
 
-	//Se definen los argumentos para realizar k-means.
+	// Se definen los argumentos para realizar k-means.
 	int intentos = 1; Mat centroides; Mat etiq;
 
 	// Se utiliza k-means para reducir el número de colores mediante clustering.
@@ -311,13 +325,12 @@ Mat distorsionBarril(Mat bgrMap){
 				// Se calculan nuevas coordenadas y se guardan.
 				double r2 = (x-Cx)*(x-Cx) + (y-Cy)*(y-Cy);
 				coordXBarril.at<float>(x,y) =
-						(double) ((y-Cy)/(1 + double(-coeficiente/1000000.0)*r2)+Cy);
+						(float) ((y-Cy)/(1 + float(-coeficiente/1000000.0)*r2)+Cy);
 				coordYBarril.at<float>(x,y) =
-						(double) ((x-Cx)/(1 + double(-coeficiente/1000000.0)*r2)+Cx);
+						(float) ((x-Cx)/(1 + float(-coeficiente/1000000.0)*r2)+Cx);
 				}
 		}
 	}
-
 
 	// Se aplican las nuevas coordenadas a la imagen.
 	remap(bgrMap, bgrMap, coordXBarril, coordYBarril, CV_INTER_LINEAR);
@@ -372,8 +385,6 @@ Mat simetrica(Mat bgrMap){
 	} else{			// Eje de simetría Y.
 		// Se redimensiona la imagen.
 		resize(bgrMap,redimen,Size(bgrMap.cols/2,bgrMap.rows));
-
-
 		// Se aplican las nuevas coordenadas.
 		remap(redimen, bgrMap, coordXSimY, coordYSimY, CV_INTER_LINEAR);
 	}
@@ -398,7 +409,7 @@ Mat escalaGrises(Mat bgrMap){
 Mat binaria(Mat bgrMap){
 
 	// Se pasa la imagen a escala de grises.
-	cvtColor(bgrMap,bgrMap,CV_RGB2GRAY);
+	cvtColor(bgrMap,bgrMap,CV_BGR2GRAY);
 	if(primeroBin){		// Si es la primera iteración se pregunta valor de threshold.
 		cout << "Escriba valor de threshold: ";
 		cin >> thresVal;		// Se lee coeficiente.
@@ -418,6 +429,7 @@ void calcularCoordenadas() {
 	coordXInv.create(bgrMap.size(), CV_32FC1);
 	coordYInv.create(bgrMap.size(), CV_32FC1);
 
+	// Se calculan las coordenadas para invertir.
 	for (int x=0; x<coordXInv.rows; x++) {		// Se recorren las filas.
 		for (int y=0; y<coordYInv.cols; y++) {		// Se recorren las columnas.
 			// Se calculan nuevas coordenadas y se guardan.
@@ -430,6 +442,7 @@ void calcularCoordenadas() {
 	coordXRot.create(bgrMap.size(), CV_32FC1);
 	coordYRot.create(bgrMap.size(), CV_32FC1);
 
+	// Se calculan las coordenadas para rotar.
 	for (int x=0; x<coordXRot.rows; x++) {		// Se recorren las filas.
 		for (int y=0; y<coordYRot.cols; y++) {		// Se recorren las columnas.
 			// Se calculan nuevas coordenadas y se guardan.
@@ -438,9 +451,11 @@ void calcularCoordenadas() {
 		}
 	}
 
-	// Se crean las matrices para las nuevas coordenadas Para simetria en eje X.
+	// Se crean las matrices para las nuevas coordenadas para simetría en eje X.
 	coordXSimX.create(bgrMap.size(), CV_32FC1);
 	coordYSimX.create(bgrMap.size(), CV_32FC1);
+
+	// Se calculan las coordenadas para simetría en eje X.
 	for (int x=0; x<coordXSimX.rows/2; x++) {		// Se recorren las filas.
 		for (int y=0; y<coordYSimX.cols; y++) {		// Se recorren las columnas.
 			// Se calculan nuevas coordenadas y se guardan.
@@ -454,6 +469,8 @@ void calcularCoordenadas() {
 	// Se crean las matrices para las nuevas coordenadas para simetria en eje y.
 	coordXSimY.create(bgrMap.size(), CV_32FC1);
 	coordYSimY.create(bgrMap.size(), CV_32FC1);
+
+	// Se calculan coordenadas para simetría en eje Y.
 	for (int x=0; x<coordXSimY.rows; x++) {		// Se recorren las filas.
 		for (int y=0; y<coordYSimY.cols/2; y++) {		// Se recorren las columnas.
 			// Se calculan nuevas coordenadas y se guardan.
