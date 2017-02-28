@@ -18,10 +18,11 @@ int main(int argc, char *argv[]) {
 	TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
 	calcularCoordenadas();					//Calculamos las coordenadas.
 
+	VideoWriter wtr("trabajo.avi", CV_FOURCC('D','I','V','X'), 30, Size(640,480));
 	while(key != 27 && TheVideoCapturer.grab()) {		// Mientras sea distinto de ESC...
 
 		TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
-		key = waitKey(30);
+		key = waitKey(20);
 
 		// Comprobamos si es opción válida para cambiar de vista.
 		if(key == 99 || key == 114 || key == 97 || key == 118
@@ -113,7 +114,9 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		imshow("BGR camara", bgrMap);	// Se muestra lo visto por la cámara.
+		wtr.write(bgrMap);
 	}
+	wtr.release();
 }
 
 /*
