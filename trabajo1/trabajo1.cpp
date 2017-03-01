@@ -14,11 +14,10 @@ int main(int argc, char *argv[]) {
 		std::cerr<<"Could not open video"<<std::endl;
 		return -1;
 	}
-	//TheVideoCapturer.grab();
+	TheVideoCapturer.grab();
 	TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
 	calcularCoordenadas();					//Calculamos las coordenadas.
 
-	//VideoWriter wtr("trabajo.avi", CV_FOURCC('D','I','V','X'), 30, Size(640,480));
 	while(key != 27 && TheVideoCapturer.grab()) {		// Mientras sea distinto de ESC...
 
 		TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
@@ -121,9 +120,7 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		imshow("BGR camara", bgrMap);	// Se muestra lo visto por la cámara.
-		//wtr.write(bgrMap);
 	}
-	//wtr.release();
 }
 
 /*
@@ -177,11 +174,66 @@ Mat ecualizar(Mat bgrMap){
  * Función que mejora el constraste de la imagen.
 */
 Mat mejorarContraste(Mat bgrMap){
+	mostrarHistograma("Sin mejora de contraste",bgrMap);
 
 	// Aumentamos el contraste de la imagen por un escalar.
-	bgrMap.convertTo(bgrMap, -1, 2, 0);
+	bgrMap.convertTo(bgrMap, -1, 2, 10);
+
+	mostrarHistograma("Con mejora de contraste",bgrMap);
 
 	return bgrMap;		// Devolvemos la matriz.
+}
+
+/*
+ * Muestra el histograma de una imagen.
+ */
+void mostrarHistograma(String titulo, Mat bgrMap) {
+	vector<Mat> canales;			// Vector para los tres canales.
+	split(bgrMap, canales);		// Separamos los tres canales.
+	Mat b_hist, g_hist, r_hist;
+
+	//Numero de valores posible.
+	int histSize = 256;
+
+	// Se define el rango del histograma.
+	float rango[] = { 0, 256 } ;
+	const float* histRango = { rango };
+
+	//Se calculan los histogramas de los tres canales.
+	calcHist( &canales[0], 1, 0, Mat(), b_hist, 1, &histSize,
+			&histRango, true, false );
+	calcHist( &canales[1], 1, 0, Mat(), g_hist, 1, &histSize,
+			&histRango, true, false );
+	calcHist( &canales[2], 1, 0, Mat(), r_hist, 1, &histSize,
+			&histRango, true, false );
+
+	//Se definen los valores de la ventana.
+	int hist_w = 512; int hist_h = 400;
+	int bin_w = cvRound( (double) hist_w/histSize );
+	//Matriz a mostrar.
+	Mat histImage( hist_h, hist_w, CV_8UC3, Scalar( 0,0,0) );
+
+	//Se normalizan los resultados para que entren en el histograma.
+	normalize(b_hist, b_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+	normalize(g_hist, g_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+	normalize(r_hist, r_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+
+	//Se dibujan los canales
+	for( int i = 1; i < histSize; i++ ) {
+		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(b_hist.at<float>(i-1)) ) ,
+				Point( bin_w*(i), hist_h - cvRound(b_hist.at<float>(i)) ),
+		        	Scalar( 255, 0, 0), 2, 8, 0  );
+		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(g_hist.at<float>(i-1)) ) ,
+		        Point( bin_w*(i), hist_h - cvRound(g_hist.at<float>(i)) ),
+		            Scalar( 0, 255, 0), 2, 8, 0  );
+		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(r_hist.at<float>(i-1)) ) ,
+		        Point( bin_w*(i), hist_h - cvRound(r_hist.at<float>(i)) ),
+		            Scalar( 0, 0, 255), 2, 8, 0  );
+	}
+
+	//Se muestra el histograma
+	namedWindow(titulo, CV_WINDOW_AUTOSIZE );
+	imshow(titulo, histImage );
 }
 
 /*

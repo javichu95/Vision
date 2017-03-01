@@ -43,5 +43,6 @@ Mat escalaGrises(Mat);		// Función que convierte la imagen a escala de grises.
 Mat simetrica(Mat);		// Función que hace la simétrica de la imagen respecto a un eje.
 Mat binaria(Mat);		// Función que convierte la imagen a binaria.
 void calcularCoordenadas();
+void mostrarHistograma(String, Mat);
 
 #endif
