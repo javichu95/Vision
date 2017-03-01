@@ -42,7 +42,7 @@ Mat rotar(Mat);			// Función que rota la imagen 180 grados.
 Mat escalaGrises(Mat);		// Función que convierte la imagen a escala de grises.
 Mat simetrica(Mat);		// Función que hace la simétrica de la imagen respecto a un eje.
 Mat binaria(Mat);		// Función que convierte la imagen a binaria.
-void calcularCoordenadas();
-void mostrarHistograma(String, Mat);
+void calcularCoordenadas();		// Función que calcula todas las coordenadas de remap.
+void mostrarHistograma(String, Mat);		// Función que muestra el histograma de una imagen.
 
 #endif
