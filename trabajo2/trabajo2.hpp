@@ -15,7 +15,10 @@ using namespace cv;
 using namespace std;
 
 void leerArchivos(string);	// Función que lee los archivos de un directorio.
-Mat umbralizar(Mat); 		// Método que umbraliza las imagenes.
+void mostrarHistogramas();	// Función que muestra los histogramas de los archivos.
+void umbralizar(); 		// Método que umbraliza las imagenes.
+Mat metodoOtsu(Mat);		// Método que umbraliza según el método Otsu.
+Mat metodoAdaptativo(Mat);	// Método que umbraliza según el método de Adaptativo.
 Mat obtenerBlops(Mat);		// Método que obtiene los blops.
 Mat obtenerDescriptores();	// Método que obtiene los descriptores.
 void mostrarHistograma(string,Mat);	// Método que muestra el histograma por pantalla.

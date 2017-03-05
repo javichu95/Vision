@@ -6,18 +6,10 @@
 int main(int argc, char *argv[]) {
 
 	leerArchivos("./imagenesT2");		// Se leen los archivos de la carpeta.
-	cout << endl << endl << ficheros.front();
-	Mat imagen = imread(ficheros.front(), CV_LOAD_IMAGE_GRAYSCALE);
-	if(!imagen.data ){
-		cout <<  "Could not open or find the image" << std::endl ;
-		return -1;
-	}
-	namedWindow( "Display window", CV_WINDOW_AUTOSIZE );
-	imshow("Display window", imagen);
-	string titulo = "histograma";
-	mostrarHistograma(titulo,imagen);
-	waitKey(0);
-	umbralizar(imagen);
+
+	//mostrarHistogramas();
+
+	umbralizar();
 }
 
 /*
@@ -36,8 +28,8 @@ void leerArchivos(string dir){
 		while(elemento != NULL){
 			elem = elemento -> d_name;
 			if(elem.compare(".") != 0 && elem.compare("..") != 0){
-				cout << elem << endl;
-				ficheros.push_back("./"+dir+"/"+elem);		// Se guarda el fichero en la lista.
+				cout << "Leyendo fichero: " << dir << "/" << elem << endl;
+				ficheros.push_back(dir+"/"+elem);		// Se guarda el fichero en la lista.
 			}
 			elemento = readdir(directorio);	// Se leen los elementos.
 		}
@@ -52,11 +44,54 @@ void leerArchivos(string dir){
  * Método que umbraliza la imagen pasada como parámetros para convertirla
  * en una imagen binaria.
  */
-Mat umbralizar(Mat imagen){
+void umbralizar(){
 
 	// Método adaptativo u Otsu.
-	Mat umbralizada;
-	return umbralizada;		// Se devuelve la matriz.
+	Mat umbralizada1, umbralizada2;
+
+	// Creamos iterador.
+	std::list<string>::iterator it = ficheros.begin();
+	while(it != ficheros.end()){		// Recorremos las imagenes.
+		Mat imagen = imread(*it, CV_LOAD_IMAGE_GRAYSCALE);
+
+		if(!imagen.data){		// Se comprueba si se puede ller la imagen.
+			cout <<  "No se puede abrir la imagen: " << *it << endl ;
+			exit(1);
+		}
+
+		umbralizada1 = metodoOtsu(imagen);		// Umbralizamos la imagen.
+		umbralizada2 = metodoAdaptativo(imagen);
+		++it;		// Actualizamos iterador.
+		waitKey(0);
+	}
+
+}
+
+/*
+ * Método que umbraliza según el método de Otsu.
+ */
+Mat metodoOtsu(Mat imagen){
+
+	threshold(imagen,imagen,0,255,THRESH_BINARY | THRESH_OTSU);
+	namedWindow( "Otsu", CV_WINDOW_AUTOSIZE );
+	imshow("Otsu", imagen);
+	return imagen;
+}
+
+
+/*
+ * Método que umbraliza según el método adaptativo.
+ */
+Mat metodoAdaptativo(Mat imagen){
+
+	Mat imagen1, imagen2;
+	adaptiveThreshold(imagen,imagen1,255,ADAPTIVE_THRESH_MEAN_C,THRESH_BINARY,51,2);
+	namedWindow( "Adaptativo media", CV_WINDOW_AUTOSIZE );
+	imshow("Adaptativo media", imagen1);
+	adaptiveThreshold(imagen,imagen2,255,ADAPTIVE_THRESH_GAUSSIAN_C,THRESH_BINARY,51,2);
+	namedWindow( "Adaptativo gauss", CV_WINDOW_AUTOSIZE );
+	imshow("Adaptativo gauss", imagen1);
+	return imagen;
 }
 
 /*
@@ -75,11 +110,27 @@ Mat obtenerDescriptores(Mat imagen){
 }
 
 /*
+ * Método que muestra los histogramas de los archivos.
+ */
+void mostrarHistogramas(){
+
+	// Creamos iterador.
+	std::list<string>::iterator it = ficheros.begin();
+	while(it != ficheros.end()){		// Recorremos las imagenes.
+		Mat imagen = imread(*it, CV_LOAD_IMAGE_GRAYSCALE);
+		mostrarHistograma(*it,imagen);		// Generamos histograma.
+		++it;		// Actualizamos iterador.
+		waitKey(0);
+	}
+
+}
+
+/*
  * Método que muestra el histograma de una imagen.
  */
 void mostrarHistograma(string titulo, Mat bgrMap) {
 
-	Mat hist;
+	Mat hist;	// Matriz para el histograma.
 
 	// Número de valores posible.
 	int histSize = 256;
@@ -108,10 +159,7 @@ void mostrarHistograma(string titulo, Mat bgrMap) {
 				Scalar( 0, 0, 255), 2, 8, 0  );
 	}
 
-		// Se muestra el histograma
-		namedWindow(titulo, CV_WINDOW_AUTOSIZE );
-		imshow(titulo, histImage );
+	// Se muestra el histograma
+	namedWindow(titulo, CV_WINDOW_AUTOSIZE );
+	imshow(titulo, histImage );
 }
-
-
-
