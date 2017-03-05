@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 	}
 	namedWindow( "Display window", CV_WINDOW_AUTOSIZE );
 	imshow("Display window", imagen);
-	string titulo = "imagen";
+	string titulo = "histograma";
 	mostrarHistograma(titulo,imagen);
 	waitKey(0);
 	umbralizar(imagen);
@@ -79,23 +79,17 @@ Mat obtenerDescriptores(Mat imagen){
  */
 void mostrarHistograma(string titulo, Mat bgrMap) {
 
-	vector<Mat> canales;			// Vector para los tres canales.
-	split(bgrMap, canales);		// Separamos los tres canales.
-	Mat b_hist, g_hist, r_hist;
+	Mat hist;
 
 	// Número de valores posible.
 	int histSize = 256;
 
 	// Se define el rango del histograma.
-	float rango[] = { 0, 256 } ;
+	float rango[] = { 0, 255 } ;
 	const float* histRango = { rango };
 
-	// Se calculan los histogramas de los tres canales.
-	calcHist( &canales[0], 1, 0, Mat(), b_hist, 1, &histSize,
-			&histRango, true, false );
-	calcHist( &canales[1], 1, 0, Mat(), g_hist, 1, &histSize,
-			&histRango, true, false );
-	calcHist( &canales[2], 1, 0, Mat(), r_hist, 1, &histSize,
+	// Se calcula el histograma.
+	calcHist( &bgrMap, 1, 0, Mat(), hist, 1, &histSize,
 			&histRango, true, false );
 
 	// Se definen los valores de la ventana.
@@ -105,20 +99,12 @@ void mostrarHistograma(string titulo, Mat bgrMap) {
 	Mat histImage( hist_h, hist_w, CV_8UC3, Scalar( 0,0,0) );
 
 	// Se normalizan los resultados para que entren en el histograma.
-	normalize(b_hist, b_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-	normalize(g_hist, g_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
-	normalize(r_hist, r_hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
+	normalize(hist, hist, 0, histImage.rows, NORM_MINMAX, -1, Mat() );
 
 	// Se dibujan los canales
 	for( int i = 1; i < histSize; i++ ) {
-		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(b_hist.at<float>(i-1)) ) ,
-				Point( bin_w*(i), hist_h - cvRound(b_hist.at<float>(i)) ),
-				Scalar( 255, 0, 0), 2, 8, 0  );
-		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(g_hist.at<float>(i-1)) ) ,
-				Point( bin_w*(i), hist_h - cvRound(g_hist.at<float>(i)) ),
-				Scalar( 0, 255, 0), 2, 8, 0  );
-		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(r_hist.at<float>(i-1)) ) ,
-				Point( bin_w*(i), hist_h - cvRound(r_hist.at<float>(i)) ),
+		line( histImage, Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ) ,
+				Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ),
 				Scalar( 0, 0, 255), 2, 8, 0  );
 	}
 
