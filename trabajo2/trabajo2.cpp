@@ -9,8 +9,11 @@ int main(int argc, char *argv[]) {
 	vector<vector<Point>> contornos;	// Vector para los contornos.
 	leerArchivos("./imagenesT2");		// Se leen los archivos de la carpeta.
 
+	//Se aprenden los distintos objetos.
+	aprendizaje();
+
 	// Creamos iterador.
-	std::list<string>::iterator it = ficheros.begin();
+	/*std::list<string>::iterator it = ficheros.begin();
 	while(it != ficheros.end()){		// Recorremos las imagenes.
 		Mat imagen = imread(*it, CV_LOAD_IMAGE_GRAYSCALE);
 
@@ -23,12 +26,31 @@ int main(int argc, char *argv[]) {
 		imagen1 = umbralizarOtsu(imagen);		// Umbralizamos la imagen.
 		imagen2 = umbralizarAdaptativo(imagen);
 		contornos = obtenerBlops(imagen1);			// Obtenemos los blops.
-		obtenerDescriptores(contornos);			// Obtenemos los descriptores.
+		obtenerDescriptores(contornos,0);			// Obtenemos los descriptores.
 
 		++it;		// Actualizamos iterador.
 		waitKey(0);
-	}
+	}*/
 
+}
+
+/*
+ * Aprende los distintos objetos.
+ */
+void aprendizaje() {
+	Mat imagen1, imagen2;		// Imagen devuelta por cada método.
+	vector<vector<Point>> contornos;	// Vector para los contornos.
+	for(uint i = 0; i < objetos.size(); i++) {
+		for(int j = 1; j <= 5; j++) {
+			string num = to_string(j);
+			string fichero = "./imagenesT2"  + objetos[i] + num + extension;
+			Mat imagen = imread(fichero);
+			imagen1 = umbralizarOtsu(imagen);		// Umbralizamos la imagen.
+			contornos = obtenerBlops(imagen1);			// Obtenemos los blops.
+			obtenerDescriptores(contornos,j);			// Obtenemos los descriptores.
+		}
+		guardarObjeto(objetos.at(i));
+	}
 }
 
 /*
@@ -116,10 +138,10 @@ vector<vector<Point>> obtenerBlops(Mat imagen){
 	// Se dibujan los contornos.
 	RNG rng(12345);		// Variable para mostrar contornos.
 	Mat drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( int i = 0; i< contornos.size(); i++ )
+	for( uint i = 0; i< contornos.size(); i++ )
 	{
 		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos, i, color, 2, 8, jerarquia, 0, Point());
+		drawContours(drawing, contornos, i, color, CV_FILLED, 8, jerarquia, 0, Point());
 	}
 
 	/// Se muestra la imagen.
@@ -127,10 +149,10 @@ vector<vector<Point>> obtenerBlops(Mat imagen){
 	imshow( "Contours", drawing );
 
 	drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( int i = 0; i< contornos1.size(); i++ )
+	for( uint i = 0; i< contornos1.size(); i++ )
 	{
 		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos1, i, color, 2, 8, jerarquia1, 0, Point());
+		drawContours(drawing, contornos1, i, color, CV_FILLED, 8, jerarquia1, 0, Point());
 	}
 
 	/// Show in a window
@@ -138,10 +160,10 @@ vector<vector<Point>> obtenerBlops(Mat imagen){
 	imshow( "Contours1", drawing );
 
 	drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( int i = 0; i< contornos2.size(); i++ )
+	for( uint i = 0; i< contornos2.size(); i++ )
 	{
 		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos2, i, color, 2, 8, jerarquia2, 0, Point());
+		drawContours(drawing, contornos2, i, color, CV_FILLED, 8, jerarquia2, 0, Point());
 	}
 
 	/// Show in a window
@@ -149,10 +171,10 @@ vector<vector<Point>> obtenerBlops(Mat imagen){
 	imshow( "Contours2", drawing );
 
 	drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( int i = 0; i< contornos3.size(); i++ )
+	for( uint i = 0; i< contornos3.size(); i++ )
 	{
 		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos3, i, color, 2, 8, jerarquia3, 0, Point());
+		drawContours(drawing, contornos3, i, color, CV_FILLED, 8, jerarquia3, 0, Point());
 	}
 
 	/// Show in a window
@@ -165,17 +187,27 @@ vector<vector<Point>> obtenerBlops(Mat imagen){
 /*
  * Método que obtiene los descriptores de la imagen.
  */
-void obtenerDescriptores(vector<vector<Point>> contornos){
+void obtenerDescriptores(vector<vector<Point>> contornos,int indice){
 
 	vector<Moments> mu(contornos.size());	// Vector para los momentos.
 	// Se calculan los momentos para cada objeto.
-	for( int i = 0; i < contornos.size(); i++ ){
+	for( uint i = 0; i < contornos.size(); i++ ){
 		mu[i] = moments(contornos[i], false );
 	}
-	for( int i = 0; i < contornos.size(); i++ ){
+	for( uint i = 0; i < contornos.size(); i++ ){
 		// Aplicar filtro por área del contorno.
 		cout << "El tamaño del contorno es: " << contornos.size() << endl;
-		cout << "El área del contorno es: " << mu[i].m00 << endl;
+		parametros.at(indice)[AREA] = mu[i].m00;
+		cout << "El área del contorno es: " << parametros[AREA] << endl;
+		parametros.at(indice)[PERIMETRO] = arcLength(contornos[i],true);
+		cout << "El perímetro del contorno es: " << parametros[PERIMETRO] << endl;
+		double inv[7];		//Array para guardar los momentos invariantes.
+		HuMoments(mu[i],inv);
+		parametros.at(indice)[INV_1] = inv[0];
+		parametros.at(indice)[INV_2] = inv[1];
+		parametros.at(indice)[INV_3] = inv[2];
+		cout << "Los 3 primeros momentos invariantes son: " << inv[0] << ", " << inv[1] <<
+				" y " << inv[2] << endl;
 	}
 
 }
@@ -184,10 +216,11 @@ void obtenerDescriptores(vector<vector<Point>> contornos){
  * Método que guarda o actualiza los parámetros del objeto en
  * el fichero.
  */
-void guardarObjeto(){
-
+void guardarObjeto(string objeto){
+	int numObjetos = 5;
 	// Utilizar fs para ir guardando si ya hay un objeto con ese nombre.
-
+	calcularMedia(numObjetos);
+	calcularVarianza(numObjetos);
 }
 
 /*
@@ -227,4 +260,30 @@ void mostrarHistograma(string titulo, Mat bgrMap) {
 	// Se muestra el histograma
 	namedWindow(titulo, CV_WINDOW_AUTOSIZE );
 	imshow(titulo, histImage );
+}
+
+/*
+ * Calcula las medias de los parametros.
+ */
+void calcularMedia(int num) {
+	for(int i = AREA; i < INV_3; i++) {
+		double total = 0.0;
+		for(int j = 0; j < num; j++) {
+			total = total + parametros.at(j)[i];
+		}
+		media[i] = total/num;
+	}
+}
+
+/*
+ * Calcula las varianzas de los parametros.
+ */
+void calcularVarianza(int num) {
+	for(int i = AREA; i < INV_3; i++) {
+		double total = 0.0;
+		for(int j = 0; j < num; j++) {
+			total = total + pow((parametros.at(j)[i]-media[i]),2);
+		}
+		varianza[i] = total/(num-1);
+	}
 }
