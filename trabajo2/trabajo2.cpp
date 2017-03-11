@@ -9,48 +9,7 @@ int main(int argc, char *argv[]) {
 	vector<vector<Point>> contornos;	// Vector para los contornos.
 	leerArchivos("./imagenesT2");		// Se leen los archivos de la carpeta.
 
-	//Se aprenden los distintos objetos.
-	aprendizaje();
-
-	// Creamos iterador.
-	/*std::list<string>::iterator it = ficheros.begin();
-	while(it != ficheros.end()){		// Recorremos las imagenes.
-		Mat imagen = imread(*it, CV_LOAD_IMAGE_GRAYSCALE);
-
-		if(!imagen.data){		// Se comprueba si se puede ller la imagen.
-			cout <<  "No se puede abrir la imagen: " << *it << endl ;
-			exit(1);
-		}
-
-		mostrarHistograma("Histograma", imagen);		// Se muestra el histograma.
-		imagen1 = umbralizarOtsu(imagen);		// Umbralizamos la imagen.
-		imagen2 = umbralizarAdaptativo(imagen);
-		contornos = obtenerBlops(imagen1);			// Obtenemos los blops.
-		obtenerDescriptores(contornos,0);			// Obtenemos los descriptores.
-
-		++it;		// Actualizamos iterador.
-		waitKey(0);
-	}*/
-
-}
-
-/*
- * Aprende los distintos objetos.
- */
-void aprendizaje() {
-	Mat imagen1, imagen2;		// Imagen devuelta por cada método.
-	vector<vector<Point>> contornos;	// Vector para los contornos.
-	for(uint i = 0; i < objetos.size(); i++) {
-		for(int j = 1; j <= 5; j++) {
-			string num = to_string(j);
-			string fichero = "./imagenesT2"  + objetos[i] + num + extension;
-			Mat imagen = imread(fichero);
-			imagen1 = umbralizarOtsu(imagen);		// Umbralizamos la imagen.
-			contornos = obtenerBlops(imagen1);			// Obtenemos los blops.
-			obtenerDescriptores(contornos,j);			// Obtenemos los descriptores.
-		}
-		guardarObjeto(objetos.at(i));
-	}
+	aprendizaje();		// Se aprenden los distintos objetos.
 }
 
 /*
@@ -82,6 +41,41 @@ void leerArchivos(string dir){
 }
 
 /*
+ * Método que aprende los distintos objetos.
+ */
+void aprendizaje() {
+
+	Mat imagen1, imagen2;		// Imagen devuelta por cada método.
+	vector<vector<Point>> contornos;	// Vector para los contornos.
+
+	list<string>::iterator it;		// Iterador para recorrer los ficheros.
+
+	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imagenes.
+		bool encontrado = false;
+		for(int i=0; !encontrado && i<objetos.size(); i++){
+			string nombre = *it;
+			// Se comprueba a que objeto corresponde.
+			if(nombre.find(objetos.at(i)) != string::npos){
+				Mat imagen = imread(nombre, CV_LOAD_IMAGE_GRAYSCALE);
+				if(!imagen.data){		// Se comprueba si se puede leer la imagen.
+					cout <<  "No se puede abrir la imagen: " << nombre << endl ;
+					exit(1);
+				}
+
+				mostrarHistograma("Histograma", imagen);		// Se muestra el histograma.
+				imagen1 = umbralizarOtsu(imagen);		// Umbralizamos la imagen.
+				contornos = obtenerBlops(imagen1);			// Obtenemos los blops.
+				obtenerDescriptores(contornos,i);			// Obtenemos los descriptores.
+				encontrado = true;
+				waitKey(0);
+			}
+		}
+	}
+	fs.release();		// Se cierra el fichero.
+	//calcularDatos();	// Se calculan las medias y varianzas.
+}
+
+/*
  * Método que umbraliza según el método de Otsu.
  */
 Mat umbralizarOtsu(Mat imagen){
@@ -89,8 +83,8 @@ Mat umbralizarOtsu(Mat imagen){
 	// Aplicamos el threshold.
 	threshold(imagen,imagen,0,255,THRESH_BINARY_INV | THRESH_OTSU);
 	namedWindow( "Otsu", CV_WINDOW_AUTOSIZE );
-	imshow("Otsu", imagen);		// Devolvemos la matriz.
-	return imagen;
+	imshow("Otsu", imagen);
+	return imagen;	// Devolvemos la matriz.
 }
 
 
@@ -190,37 +184,38 @@ vector<vector<Point>> obtenerBlops(Mat imagen){
 void obtenerDescriptores(vector<vector<Point>> contornos,int indice){
 
 	vector<Moments> mu(contornos.size());	// Vector para los momentos.
+	double inv[7];		// Array para guardar los momentos invariantes.
+	float momentos [5];		// Momentos del objeto.
+
 	// Se calculan los momentos para cada objeto.
-	for( uint i = 0; i < contornos.size(); i++ ){
-		mu[i] = moments(contornos[i], false );
-	}
-	for( uint i = 0; i < contornos.size(); i++ ){
-		// Aplicar filtro por área del contorno.
-		cout << "El tamaño del contorno es: " << contornos.size() << endl;
-		parametros.at(indice)[AREA] = mu[i].m00;
-		cout << "El área del contorno es: " << parametros[AREA] << endl;
-		parametros.at(indice)[PERIMETRO] = arcLength(contornos[i],true);
-		cout << "El perímetro del contorno es: " << parametros[PERIMETRO] << endl;
-		double inv[7];		//Array para guardar los momentos invariantes.
-		HuMoments(mu[i],inv);
-		parametros.at(indice)[INV_1] = inv[0];
-		parametros.at(indice)[INV_2] = inv[1];
-		parametros.at(indice)[INV_3] = inv[2];
-		cout << "Los 3 primeros momentos invariantes son: " << inv[0] << ", " << inv[1] <<
-				" y " << inv[2] << endl;
+	for(uint i = 0; i < contornos.size(); i++){
+		mu[i] = moments(contornos[i], false);
 	}
 
-}
+	// Se aplica filtro de área.
+	for(uint i = 0; i < contornos.size(); i++){
+		// Se comprueba si es el contorno válido.
+		if(contornos.size() == 1 || (contornos.size() > 1 && mu[i].m00 > 500)){
+			momentos[AREA] = mu[i].m00;	// Se obtiene el área.
+			// Se calcula el perímetro.
+			momentos[PERIMETRO] = arcLength(contornos[i],true);
 
-/*
- * Método que guarda o actualiza los parámetros del objeto en
- * el fichero.
- */
-void guardarObjeto(string objeto){
-	int numObjetos = 5;
-	// Utilizar fs para ir guardando si ya hay un objeto con ese nombre.
-	calcularMedia(numObjetos);
-	calcularVarianza(numObjetos);
+			// Se obtienen los momentos invariantes.
+			HuMoments(mu[i],inv);
+			momentos[INV_1] = inv[0];
+			momentos[INV_2] = inv[1];
+			momentos[INV_3] = inv[2];
+		}
+	}
+
+	// Se escriben los datos en el fichero.
+	fs << objetos.at(indice) << 0;
+	fs << "Area"<< momentos[AREA];
+	fs << "Perimetro"<< momentos[PERIMETRO];
+	fs << "INV_1"<< momentos[INV_1];
+	fs << "INV_2"<< momentos[INV_2];
+	fs << "INV_3"<< momentos[INV_3];
+
 }
 
 /*
@@ -263,27 +258,24 @@ void mostrarHistograma(string titulo, Mat bgrMap) {
 }
 
 /*
- * Calcula las medias de los parametros.
+ * Método que recorre el fichero actualizando los datos y guardando
+ * la media y la varianza.
  */
-void calcularMedia(int num) {
-	for(int i = AREA; i < INV_3; i++) {
-		double total = 0.0;
-		for(int j = 0; j < num; j++) {
-			total = total + parametros.at(j)[i];
-		}
-		media[i] = total/num;
-	}
-}
+/*void calcularDatos() {
 
-/*
- * Calcula las varianzas de los parametros.
- */
-void calcularVarianza(int num) {
 	for(int i = AREA; i < INV_3; i++) {
 		double total = 0.0;
 		for(int j = 0; j < num; j++) {
-			total = total + pow((parametros.at(j)[i]-media[i]),2);
+			//total = total + parametros.at(j)[i];
 		}
-		varianza[i] = total/(num-1);
+		media[i] = total/(num+1);
 	}
-}
+
+	for(int i = AREA; i < INV_3; i++) {
+		double total = 0.0;
+		for(int j = 0; j < num; j++) {
+			//total = total + pow((parametros.at(j)[i]-media[i]),2);
+		}
+		varianza[i] = total/(num+1);
+	}
+}*/
