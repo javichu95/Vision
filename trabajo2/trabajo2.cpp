@@ -5,8 +5,6 @@
  */
 int main(int argc, char *argv[]) {
 
-	Mat imagen1, imagen2;		// Imagen devuelta por cada método.
-	vector<vector<Point>> contornos;	// Vector para los contornos.
 	leerArchivos("./imagenesT2");		// Se leen los archivos de la carpeta.
 
 	aprendizaje();		// Se aprenden los distintos objetos.
@@ -53,6 +51,7 @@ void aprendizaje() {
 	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imagenes.
 		bool encontrado = false;
 		for(int i=0; !encontrado && i<objetos.size(); i++){
+
 			string nombre = *it;
 			// Se comprueba a que objeto corresponde.
 			if(nombre.find(objetos.at(i)) != string::npos){
@@ -65,14 +64,17 @@ void aprendizaje() {
 				mostrarHistograma("Histograma", imagen);		// Se muestra el histograma.
 				imagen1 = umbralizarOtsu(imagen);		// Umbralizamos la imagen.
 				contornos = obtenerBlops(imagen1);			// Obtenemos los blops.
-				obtenerDescriptores(contornos,i);			// Obtenemos los descriptores.
-				encontrado = true;
+				obtenerDescriptores(contornos,i,*it);			// Obtenemos los descriptores.
+				encontrado = true;		// Se indica que se ha procesado.
+				numFicheros++;			// Se actualiza el número de ficheros procesados.
 				waitKey(0);
 			}
 		}
 	}
 	fs.release();		// Se cierra el fichero.
-	//calcularDatos();	// Se calculan las medias y varianzas.
+	FileStorage fs("objetos.yml", FileStorage::READ);
+	calcularDatos();	// Se calculan las medias y varianzas.
+
 }
 
 /*
@@ -181,7 +183,7 @@ vector<vector<Point>> obtenerBlops(Mat imagen){
 /*
  * Método que obtiene los descriptores de la imagen.
  */
-void obtenerDescriptores(vector<vector<Point>> contornos,int indice){
+void obtenerDescriptores(vector<vector<Point>> contornos, int indice, string nombre){
 
 	vector<Moments> mu(contornos.size());	// Vector para los momentos.
 	double inv[7];		// Array para guardar los momentos invariantes.
@@ -193,7 +195,7 @@ void obtenerDescriptores(vector<vector<Point>> contornos,int indice){
 	}
 
 	// Se aplica filtro de área.
-	for(uint i = 0; i < contornos.size(); i++){
+	for(int i = 0; i < contornos.size(); i++){
 		// Se comprueba si es el contorno válido.
 		if(contornos.size() == 1 || (contornos.size() > 1 && mu[i].m00 > 500)){
 			momentos[AREA] = mu[i].m00;	// Se obtiene el área.
@@ -208,13 +210,15 @@ void obtenerDescriptores(vector<vector<Point>> contornos,int indice){
 		}
 	}
 
+	// Se obtiene el nombre del fichero.
+	String nomFichero = nombre.substr(nombre.find_last_of("/")+1,nombre.length());
+	nomFichero = nomFichero.substr(0,nomFichero.find_last_of("."));
 	// Se escriben los datos en el fichero.
-	fs << objetos.at(indice) << 0;
-	fs << "Area"<< momentos[AREA];
-	fs << "Perimetro"<< momentos[PERIMETRO];
-	fs << "INV_1"<< momentos[INV_1];
-	fs << "INV_2"<< momentos[INV_2];
-	fs << "INV_3"<< momentos[INV_3];
+	fs << "PARAMETROS_" + nomFichero << "[:";
+	for(int i=AREA; i<INV_3; i++){
+		fs << momentos[i];
+	}
+	fs << "]";
 
 }
 
@@ -261,21 +265,35 @@ void mostrarHistograma(string titulo, Mat bgrMap) {
  * Método que recorre el fichero actualizando los datos y guardando
  * la media y la varianza.
  */
-/*void calcularDatos() {
+void calcularDatos() {
 
-	for(int i = AREA; i < INV_3; i++) {
-		double total = 0.0;
-		for(int j = 0; j < num; j++) {
-			//total = total + parametros.at(j)[i];
-		}
-		media[i] = total/(num+1);
+	list<string>::iterator it;		// Iterador para recorrer los ficheros.
+	Vec<float,5> parametros;		// Vector para los parámetros.
+	String nomFichero;			// String para el nombre del fichero.
+	Vec<float,5> varParcial;	// Vector auxiliar para la varianza.
+
+	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imagenes.
+		nomFichero = (*it).substr((*it).find_last_of("/")+1,(*it).length());
+		nomFichero = nomFichero.substr(0,nomFichero.find_last_of("."));
+		fs["PARAMETROS"+nomFichero] >> parametros;
+		media = media + parametros;		// Se acumulan los valores.
+		waitKey();
 	}
 
-	for(int i = AREA; i < INV_3; i++) {
-		double total = 0.0;
-		for(int j = 0; j < num; j++) {
-			//total = total + pow((parametros.at(j)[i]-media[i]),2);
+	media = media / numFicheros;		// Se calcula la media.
+
+	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imagenes.
+		nomFichero = (*it).substr((*it).find_last_of("/")+1,(*it).length());
+		nomFichero = nomFichero.substr(0,nomFichero.find_last_of("."));
+		fs["PARAMETROS"+nomFichero] >> parametros;
+		for(int j = 0; j<parametros.cols; j++){
+			// Se calcula la varianza.
+			varParcial[j] = (parametros[j] - media[j]) * (parametros[j] - media[j]);
+			varianza = varianza + varParcial;
 		}
-		varianza[i] = total/(num+1);
+		waitKey();
 	}
-}*/
+
+	varianza = varianza / (numFicheros-1);		// Se calcula la varianza.
+
+}
