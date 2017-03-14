@@ -3,12 +3,11 @@
 /*
  * Método principal que lanza la ejecución de todo el programa.
  */
-int trabajo2() {
+int main(int argc, char *argv[]) {
 
 	leerArchivos("./imagenesT2");		// Se leen los archivos de la carpeta.
 
 	aprendizaje();		// Se aprenden los distintos objetos.
-	return 1;
 }
 
 /*
@@ -49,11 +48,11 @@ void aprendizaje() {
 
 	list<string>::iterator it;		// Iterador para recorrer los ficheros.
 
-	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imagenes.
+	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imágenes.
 		bool encontrado = false;
 		for(int i=0; !encontrado && i<objetos.size(); i++){
 
-			string nombre = *it;
+			string nombre = *it;	// Nombre del fichero.
 			// Se comprueba a que objeto corresponde.
 			if(nombre.find(objetos.at(i)) != string::npos){
 				Mat imagen = imread(nombre, CV_LOAD_IMAGE_GRAYSCALE);
@@ -65,15 +64,15 @@ void aprendizaje() {
 				mostrarHistograma("Histograma", imagen);		// Se muestra el histograma.
 				imagen1 = umbralizarOtsu(imagen);		// Umbralizamos la imagen.
 				contornos = obtenerBlops(imagen1);			// Obtenemos los blops.
-				obtenerDescriptores(contornos,i,*it);			// Obtenemos los descriptores.
+				obtenerDescriptores(contornos,nombre);			// Obtenemos los descriptores.
 				encontrado = true;		// Se indica que se ha procesado.
 				numFicheros++;			// Se actualiza el número de ficheros procesados.
 				waitKey(0);
 			}
 		}
 	}
-	fs.release();		// Se cierra el fichero.
-	FileStorage fs("objetos.yml", FileStorage::READ);
+	fs.release();		// Se libera el fichero.
+
 	calcularDatos();	// Se calculan las medias y varianzas.
 
 }
@@ -184,7 +183,7 @@ vector<vector<Point>> obtenerBlops(Mat imagen){
 /*
  * Método que obtiene los descriptores de la imagen.
  */
-void obtenerDescriptores(vector<vector<Point>> contornos, int indice, string nombre){
+void obtenerDescriptores(vector<vector<Point>> contornos, string nombre){
 
 	vector<Moments> mu(contornos.size());	// Vector para los momentos.
 	double inv[7];		// Array para guardar los momentos invariantes.
@@ -215,8 +214,8 @@ void obtenerDescriptores(vector<vector<Point>> contornos, int indice, string nom
 	String nomFichero = nombre.substr(nombre.find_last_of("/")+1,nombre.length());
 	nomFichero = nomFichero.substr(0,nomFichero.find_last_of("."));
 	// Se escriben los datos en el fichero.
-	fs << "PARAMETROS_" + nomFichero << "[:";
-	for(int i=AREA; i<INV_3; i++){
+	fs << "PARAMETROS_" + nomFichero << "[";
+	for(int i=AREA; i<=INV_3; i++){
 		fs << momentos[i];
 	}
 	fs << "]";
@@ -273,28 +272,61 @@ void calcularDatos() {
 	String nomFichero;			// String para el nombre del fichero.
 	Vec<float,5> varParcial;	// Vector auxiliar para la varianza.
 
-	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imagenes.
+	fs.open("objetos.yml", FileStorage::READ);		// Se abre para lectura.
+	if(!fs.isOpened()){	// Se comprueba si se puede abrir.
+		cout << "Error con el fichero: objetos.yml" << endl;
+		exit(1);			// Se termina la ejecución.
+	}
+
+	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imágenes.
+		// Obtenemos el nombre del fichero.
 		nomFichero = (*it).substr((*it).find_last_of("/")+1,(*it).length());
 		nomFichero = nomFichero.substr(0,nomFichero.find_last_of("."));
-		fs["PARAMETROS"+nomFichero] >> parametros;
+
+		// Obtenemos los parámetros.
+		obtenerParametros(parametros,nomFichero);
+
 		media = media + parametros;		// Se acumulan los valores.
-		waitKey();
 	}
 
 	media = media / numFicheros;		// Se calcula la media.
 
-	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imagenes.
+	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imágenes.
+		// Obtenemos el nombre del fichero.
 		nomFichero = (*it).substr((*it).find_last_of("/")+1,(*it).length());
 		nomFichero = nomFichero.substr(0,nomFichero.find_last_of("."));
-		fs["PARAMETROS"+nomFichero] >> parametros;
+
+		// Obtenemos los parámetros.
+		obtenerParametros(parametros,nomFichero);
+
 		for(int j = 0; j<parametros.cols; j++){
 			// Se calcula la varianza.
 			varParcial[j] = (parametros[j] - media[j]) * (parametros[j] - media[j]);
 			varianza = varianza + varParcial;
 		}
-		waitKey();
 	}
 
 	varianza = varianza / (numFicheros-1);		// Se calcula la varianza.
+
+	cout << varianza[0] << endl;
+
+	fs.release();		// Se libera el fichero.
+
+}
+
+/*
+ * Método que obtiene los parámetros del fichero.
+ */
+void obtenerParametros(Vec<float,5> &parametros, string nomFichero){
+
+	int indice = 0;		// Indice para rellenar los parámetros.
+	FileNode n;		// Nodo para leer los datos.
+	FileNodeIterator itPar;		// Iterador para recorrer la lista de parámetros.
+
+	n = fs["PARAMETROS_"+nomFichero];		// Obtenemos el nodo de los parámetros.
+	for (itPar = n.begin(); itPar != n.end(); ++itPar){
+		parametros[indice] = (float)*itPar;		// Insetamos el parámetro.
+		indice++;
+	}
 
 }

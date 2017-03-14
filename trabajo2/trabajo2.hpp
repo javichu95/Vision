@@ -11,15 +11,15 @@ using namespace cv;
 using namespace std;
 
 // Métodos para el aprendizaje y reconocimiento.
-int trabajo2();
 void leerArchivos(string);	// Función que lee los archivos de un directorio.
 Mat umbralizarOtsu(Mat);		// Método que umbraliza según el método Otsu.
 Mat umbralizarAdaptativo(Mat);	// Método que umbraliza según el método de Adaptativo.
 vector<vector<Point>> obtenerBlops(Mat);		// Método que obtiene los blops.
-void obtenerDescriptores(vector<vector<Point>>,int,string);	// Método que obtiene los descriptores.
+void obtenerDescriptores(vector<vector<Point>>,string);	// Método que obtiene los descriptores.
 void mostrarHistograma(string,Mat);	// Método que muestra el histograma por pantalla.
 void aprendizaje(); // Método que itera sobre diferentes objetos.
 void calcularDatos(); // Método que calcula las medias y varianzas de los parámetros.
+void obtenerParametros(Vec<float,5>&,string);		// Método que obtiene los parámetros del fichero.
 
 // Variables globales utilizadas.
 list<string> ficheros;		// Nombre de todos los ficheros del directorio.
