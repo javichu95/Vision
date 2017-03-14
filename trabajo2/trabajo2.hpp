@@ -11,6 +11,7 @@ using namespace cv;
 using namespace std;
 
 // Métodos para el aprendizaje y reconocimiento.
+int trabajo2();
 void leerArchivos(string);	// Función que lee los archivos de un directorio.
 Mat umbralizarOtsu(Mat);		// Método que umbraliza según el método Otsu.
 Mat umbralizarAdaptativo(Mat);	// Método que umbraliza según el método de Adaptativo.

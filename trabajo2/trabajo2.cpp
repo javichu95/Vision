@@ -3,11 +3,12 @@
 /*
  * Método principal que lanza la ejecución de todo el programa.
  */
-int main(int argc, char *argv[]) {
+int trabajo2() {
 
 	leerArchivos("./imagenesT2");		// Se leen los archivos de la carpeta.
 
 	aprendizaje();		// Se aprenden los distintos objetos.
+	return 1;
 }
 
 /*
