@@ -6,8 +6,11 @@
 int main(int argc, char *argv[]) {
 
 	leerArchivos("./imagenesT2");		// Se leen los archivos de la carpeta.
-
-	aprendizaje();		// Se aprenden los distintos objetos.
+	for(uint i = 0; i< objetos.size(); i++) {
+		aprendizaje(objetos.at(i));		// Se aprenden los distintos objetos.
+	}
+	fs.release();		// Se libera el fichero.
+	return 0;
 }
 
 /*
@@ -41,20 +44,17 @@ void leerArchivos(string dir){
 /*
  * Método que aprende los distintos objetos.
  */
-void aprendizaje() {
+void aprendizaje(string objeto) {
 
 	Mat imagen1, imagen2;		// Imagen devuelta por cada método.
 	vector<vector<Point>> contornos;	// Vector para los contornos.
 
 	list<string>::iterator it;		// Iterador para recorrer los ficheros.
-
+	int n = 0;			//Numero de imagenes de un mismo tipo.
 	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imágenes.
-		bool encontrado = false;
-		for(int i=0; !encontrado && i<objetos.size(); i++){
-
 			string nombre = *it;	// Nombre del fichero.
 			// Se comprueba a que objeto corresponde.
-			if(nombre.find(objetos.at(i)) != string::npos){
+			if(nombre.find(objeto) != string::npos){
 				Mat imagen = imread(nombre, CV_LOAD_IMAGE_GRAYSCALE);
 				if(!imagen.data){		// Se comprueba si se puede leer la imagen.
 					cout <<  "No se puede abrir la imagen: " << nombre << endl ;
@@ -65,15 +65,16 @@ void aprendizaje() {
 				imagen1 = umbralizarOtsu(imagen);		// Umbralizamos la imagen.
 				contornos = obtenerBlops(imagen1);			// Obtenemos los blops.
 				obtenerDescriptores(contornos,nombre);			// Obtenemos los descriptores.
-				encontrado = true;		// Se indica que se ha procesado.
 				numFicheros++;			// Se actualiza el número de ficheros procesados.
+				n++;
 				waitKey(0);
-			}
-		}
-	}
-	fs.release();		// Se libera el fichero.
 
-	calcularDatos();	// Se calculan las medias y varianzas.
+			}
+	}
+
+	calcularDatos(n);	// Se calculan las medias y varianzas.
+	descriptores.clear();	//Se eliminan los parametros guardados.
+	escribirDatos(objeto,n);
 
 }
 
@@ -187,7 +188,7 @@ void obtenerDescriptores(vector<vector<Point>> contornos, string nombre){
 
 	vector<Moments> mu(contornos.size());	// Vector para los momentos.
 	double inv[7];		// Array para guardar los momentos invariantes.
-	float momentos [5];		// Momentos del objeto.
+	vector<float> momentos;		// Momentos del objeto.
 
 	// Se calculan los momentos para cada objeto.
 	for(uint i = 0; i < contornos.size(); i++){
@@ -195,31 +196,21 @@ void obtenerDescriptores(vector<vector<Point>> contornos, string nombre){
 	}
 
 	// Se aplica filtro de área.
-	for(int i = 0; i < contornos.size(); i++){
+	for(uint i = 0; i < contornos.size(); i++){
 		// Se comprueba si es el contorno válido.
 		if(contornos.size() == 1 || (contornos.size() > 1 && mu[i].m00 > 500)){
-			momentos[AREA] = mu[i].m00;	// Se obtiene el área.
+			momentos.push_back(mu[i].m00);	// Se obtiene el área.
 			// Se calcula el perímetro.
-			momentos[PERIMETRO] = arcLength(contornos[i],true);
+			momentos.push_back(arcLength(contornos[i],true));
 
 			// Se obtienen los momentos invariantes.
 			HuMoments(mu[i],inv);
-			momentos[INV_1] = inv[0];
-			momentos[INV_2] = inv[1];
-			momentos[INV_3] = inv[2];
+			momentos.push_back(inv[0]);
+			momentos.push_back(inv[1]);
+			momentos.push_back(inv[2]);
 		}
 	}
-
-	// Se obtiene el nombre del fichero.
-	String nomFichero = nombre.substr(nombre.find_last_of("/")+1,nombre.length());
-	nomFichero = nomFichero.substr(0,nomFichero.find_last_of("."));
-	// Se escriben los datos en el fichero.
-	fs << "PARAMETROS_" + nomFichero << "[";
-	for(int i=AREA; i<=INV_3; i++){
-		fs << momentos[i];
-	}
-	fs << "]";
-
+	descriptores.push_back(momentos);
 }
 
 /*
@@ -265,8 +256,35 @@ void mostrarHistograma(string titulo, Mat bgrMap) {
  * Método que recorre el fichero actualizando los datos y guardando
  * la media y la varianza.
  */
-void calcularDatos() {
+void calcularDatos(int num) {
+	for(int i = 0; i< numParametros; i++) {
+		media[i] = 0.0;
+		varianza[i] = 0.0;
+	}
+	for(uint i = 0; i< descriptores.size();i++) {
+		media[AREA] = media[AREA] + descriptores.at(i)[AREA];
+		media[PERIMETRO] = media[PERIMETRO] + descriptores.at(i)[PERIMETRO];
+		media[INV_1] = media[INV_1] + descriptores.at(i)[INV_1];
+		media[INV_2] = media[INV_2] + descriptores.at(i)[INV_2];
+		media[INV_2] = media[INV_3] + descriptores.at(i)[INV_3];
+	}
+	for(int i = 0; i< numParametros; i++) {
+		media[i] = media[i]/num;
+	}
 
+	for(uint i = 0; i< descriptores.size();i++) {
+		varianza[AREA] =  varianza[AREA] + pow(descriptores.at(i)[AREA]-media[AREA],2);
+		varianza[PERIMETRO] = varianza[PERIMETRO] +
+				pow(descriptores.at(i)[PERIMETRO]-media[PERIMETRO],2);
+		varianza[INV_1] = varianza[INV_1] + pow(descriptores.at(i)[INV_1]-media[INV_1],2);
+		varianza[INV_2] = varianza[INV_2] + pow(descriptores.at(i)[INV_2]-media[INV_2],2);
+		varianza[INV_3] = varianza[INV_3] + pow(descriptores.at(i)[INV_3]-media[INV_3],2);
+	}
+	for(int i = 0; i< numParametros; i++) {
+		varianza[i] = varianza[i]/(num-1);
+	}
+
+	/*
 	list<string>::iterator it;		// Iterador para recorrer los ficheros.
 	Vec<float,5> parametros;		// Vector para los parámetros.
 	String nomFichero;			// String para el nombre del fichero.
@@ -311,6 +329,7 @@ void calcularDatos() {
 	cout << varianza[0] << endl;
 
 	fs.release();		// Se libera el fichero.
+	*/
 
 }
 
@@ -329,4 +348,19 @@ void obtenerParametros(Vec<float,5> &parametros, string nomFichero){
 		indice++;
 	}
 
+}
+
+void escribirDatos(string objeto, int num) {
+	fs << objeto + "_" + "numero" << "[";
+	fs << num;
+	fs << "]";
+	for(int i = 0; i < numParametros; i++) {
+	// Se escriben los datos en el fichero.
+		fs << objeto + "_" + parametros[i] + "_" + "media" << "[";
+		fs << media[i];
+		fs << "]";
+		fs << objeto + "_" + parametros[i] + "_" + "varianza" << "[";
+		fs << varianza[i];
+		fs << "]";
+	}
 }
