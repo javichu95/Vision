@@ -5,7 +5,7 @@
  */
 int main(int argc, char *argv[]) {
 
-	if(argc < 1) {
+	if(argc > 1) {
 		reconocer(argv[0]);
 		return 0;
 	}
@@ -377,7 +377,6 @@ void escribirDatos(string objeto, int num) {
  */
 void leerDatos(string objeto) {
 	for(int i = 0; i < numParametros; i++) {
-		int indice = 0;		// Indice para rellenar los parámetros.
 		FileNode n;		// Nodo para leer los datos.
 		FileNodeIterator itPar;		// Iterador para recorrer la lista de parámetros.
 		// Obtenemos el nodo de los parámetros.
@@ -414,11 +413,12 @@ void reconocer(string fich) {
 	Mat imgUm = umbralizarOtsu(img);		// Umbralizamos la imagen.
 	contornos = obtenerBlops(imgUm);			// Obtenemos los blops.
 	obtenerDescriptores(contornos, fich);
-	for(int i = 0; i < objetos.size(); i++) {
+	for(uint i = 0; i < objetos.size(); i++) {
 		leerDatos(objetos.at(i));
-		for(int j = 0; j < descriptores.size();j++) {
+		for(uint j = 0; j < descriptores.size();j++) {
 			float distM = mahalanobis(j);
-			//CMPROBAR PARA CADA OBJETO SI ALGUNO PASA EL TEST.
+			cout << distM << endl;
+			//COMPROBAR PARA CADA OBJETO SI ALGUNO PASA EL TEST.
 		}
 	}
 }
