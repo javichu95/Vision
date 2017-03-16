@@ -5,7 +5,13 @@
  */
 int main(int argc, char *argv[]) {
 
+	if(argc < 1) {
+		reconocer(argv[0]);
+		return 0;
+	}
 	leerArchivos("./imagenesT2");		// Se leen los archivos de la carpeta.
+	// Filestorage para almacenar los objetos.
+	fs = FileStorage("objetos.yml", FileStorage::WRITE);
 	for(uint i = 0; i< objetos.size(); i++) {
 		aprendizaje(objetos.at(i));		// Se aprenden los distintos objetos.
 	}
@@ -209,8 +215,9 @@ void obtenerDescriptores(vector<vector<Point>> contornos, string nombre){
 			momentos.push_back(inv[1]);
 			momentos.push_back(inv[2]);
 		}
+		descriptores.push_back(momentos);
+		momentos.clear();
 	}
-	descriptores.push_back(momentos);
 }
 
 /*
@@ -362,5 +369,56 @@ void escribirDatos(string objeto, int num) {
 		fs << objeto + "_" + parametros[i] + "_" + "varianza" << "[";
 		fs << varianza[i];
 		fs << "]";
+	}
+}
+
+/*
+ * Lee los datos del fichero objetos.
+ */
+void leerDatos(string objeto) {
+	for(int i = 0; i < numParametros; i++) {
+		int indice = 0;		// Indice para rellenar los parámetros.
+		FileNode n;		// Nodo para leer los datos.
+		FileNodeIterator itPar;		// Iterador para recorrer la lista de parámetros.
+		// Obtenemos el nodo de los parámetros.
+		n = fs[objeto + "_" + parametros[i] + "media"];
+		media[i] = (float)*(n.begin());		// Insetamos el parámetro.
+		n = fs[objeto + "_" + parametros[i] + "varianza"];
+		varianza[i] = (float)*(n.begin());		// Insertamos el parámetro.
+	}
+}
+
+/*
+ * Calcula la distancia de mahalanobis de uno de los objetos.
+ */
+float mahalanobis(int contorno) {
+	vector<float> parametros = descriptores.at(contorno);	//Se obtienen los parametros;
+	float mahalanobis = 0.0;
+	//Se calcula la distancia de mahalanobis.
+	for(uint i = 0; i < parametros.size(); i++) {
+		mahalanobis += (pow(parametros.at(i)-media[i],2))/varianza[i];
+	}
+	return mahalanobis;
+}
+
+/*
+ * Reconoce los objetos de una imagen.
+ */
+void reconocer(string fich) {
+	vector<vector<Point>> contornos;	// Vector para los contornos.
+	Mat img = imread(fich,CV_LOAD_IMAGE_GRAYSCALE);
+	if(!img.data){		// Se comprueba si se puede leer la imagen.
+		cout <<  "No se puede abrir la imagen: " << fich << endl ;
+		exit(1);
+	}
+	Mat imgUm = umbralizarOtsu(img);		// Umbralizamos la imagen.
+	contornos = obtenerBlops(imgUm);			// Obtenemos los blops.
+	obtenerDescriptores(contornos, fich);
+	for(int i = 0; i < objetos.size(); i++) {
+		leerDatos(objetos.at(i));
+		for(int j = 0; j < descriptores.size();j++) {
+			float distM = mahalanobis(j);
+			//CMPROBAR PARA CADA OBJETO SI ALGUNO PASA EL TEST.
+		}
 	}
 }

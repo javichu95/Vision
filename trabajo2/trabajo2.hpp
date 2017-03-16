@@ -18,9 +18,10 @@ vector<vector<Point>> obtenerBlops(Mat);		// Método que obtiene los blops.
 void obtenerDescriptores(vector<vector<Point>>,string);	// Método que obtiene los descriptores.
 void mostrarHistograma(string,Mat);	// Método que muestra el histograma por pantalla.
 void aprendizaje(string objeto); // Método que itera sobre diferentes objetos.
-void calcularDatos(int); // Método que calcula las medias y varianzas de los parámetros.
 void obtenerParametros(Vec<float,5>&,string);		// Método que obtiene los parámetros del fichero.
 void escribirDatos(string,int); 		//Escribe los datos en el fichero.
+void leerDatos(string objetos);	//Lee datos del fichero de objetos.
+void reconocer(string fich);	//Reconoce los objetos de la imagen dada.
 
 // Variables globales utilizadas.
 list<string> ficheros;		// Nombre de todos los ficheros del directorio.
@@ -32,7 +33,7 @@ const int numParametros = 5;
 // Tipos de objetos a reconocer.
 vector<string> objetos = {"circulo", "rectangulo", "rueda", "triangulo","vagon"};
 // Filestorage para almacenar los objetos.
-FileStorage fs ("objetos.yml", FileStorage::WRITE);
+FileStorage fs;
 vector<vector<float>> descriptores;
 float media[numParametros];			// Media de cada parámetro.
 float varianza[numParametros];			// Varianza de cada parámetro.
