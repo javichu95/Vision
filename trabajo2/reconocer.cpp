@@ -20,25 +20,7 @@ int main(int argc, char *argv[]) {
 }
 
 /*
- * Método que lee los datos del fichero objetos.
- */
-void leerDatos(string objeto) {
-
-	fs = FileStorage(fichObjetos, FileStorage::READ);		// Se abre el fichero para lectura.
-	for(int i = 0; i < numParametros; i++) {
-		FileNode n;		// Nodo para leer los datos.
-		FileNodeIterator itPar;		// Iterador para recorrer la lista de parámetros.
-		// Obtenemos el nodo de los parámetros.
-		n = fs[objeto + "_" + parametros[i] + "media"];
-		media[i] = (float)*(n.begin());		// Insetamos el parámetro.
-		n = fs[objeto + "_" + parametros[i] + "varianza"];
-		varianza[i] = (float)*(n.begin());		// Insertamos el parámetro.
-	}
-
-}
-
-/*
- * Reconoce los objetos de una imagen.
+ * Método que reconoce los objetos de una imagen.
  */
 void reconocer(string fich) {
 
@@ -55,13 +37,36 @@ void reconocer(string fich) {
 	contornos = obtenerBlops(imgUm);			// Obtenemos los blops.
 	obtenerDescriptores(contornos, fich);		// Obtenemos los descriptores.
 
-	for(int i = 0; i < objetos.size(); i++) {		// Se recorren los objetos.
-		leerDatos(objetos.at(i));
-		for(int j = 0; j < descriptores.size();j++) {
-			float distM = mahalanobis(j);
-			cout << distM << endl;
-			//COMPROBAR PARA CADA OBJETO SI ALGUNO PASA EL TEST.
+	for(int i = 0; i < descriptores.size(); i++) {		// Se recorren los descriptores.
+		tipoContorno.clear();			// Se vacía el vector.
+		for(int j = 0; j < objetos.size(); j++) {		// Se recorren los objetos.
+			leerDatos(objetos.at(j));		// Se leen los datos del objeto.
+			float distM = mahalanobis(i);		// Se calcula la distancia a ese objeto.
+			if(distM <= valChi){		// Si cumple el criterio.
+				tipoContorno.push_back(objetos.at(j));		// Se añade a la lista.
+			}
 		}
+		dibujarBlops(i,imgUm,"blop");
+		mostrarResultados();		// Se muestran los resultados.
+		waitKey(0);
+	}
+
+}
+
+/*
+ * Método que lee los datos del fichero objetos.
+ */
+void leerDatos(string objeto) {
+
+	fs = FileStorage(fichObjetos, FileStorage::READ);		// Se abre el fichero para lectura.
+	for(int i = 0; i < numParametros; i++) {
+		FileNode n;		// Nodo para leer los datos.
+		FileNodeIterator itPar;		// Iterador para recorrer la lista de parámetros.
+		// Obtenemos el nodo de los parámetros.
+		n = fs[objeto + "_" + parametros[i] + "_" + "media"];
+		media[i] = (float)*(n.begin());		// Insetamos el parámetro.
+		n = fs[objeto + "_" + parametros[i] + "_" + "varianza"];
+		varianza[i] = (float)*(n.begin());		// Insertamos el parámetro.
 	}
 
 }
@@ -74,14 +79,37 @@ float mahalanobis(int contorno) {
 	//Se obtienen los parámetros.
 	Vec<float,numParametros> parametros = descriptores.at(contorno);
 	float mahalanobis = 0.0;		// Variables para la distancia.
-	cout << parametros.cols << endl << endl;
-	cout << parametros.rows << endl << endl;
 	//Se calcula la distancia de mahalanobis.
-	for(int i = 0; i < parametros.cols; i++) {
+	for(int i = 0; i < parametros.rows; i++) {
 		mahalanobis += (pow(parametros[i]-media[i],2))/varianza[i];
 	}
 
-	return mahalanobis;
+	return mahalanobis;		// Se devuelve la distancia.
+
+}
+
+/*
+ * Método que muestra los resultados por pantalla.
+ */
+void mostrarResultados(){
+
+	if(tipoContorno.size() == 0){
+		// El objeto es desconocido.
+		cout << "El objeto es desconocido." << endl;
+	} else if(tipoContorno.size() == 1){
+		// El objeto es de solo una clase.
+		cout << "El objeto es " << tipoContorno.at(0) << "." << endl;
+	} else{
+		// Se recorren las clases de ese contorno.
+		cout << "El objeto es ";
+		for (int j = 0; j < tipoContorno.size(); j++){
+			if(j != tipoContorno.size() - 1){
+				cout << tipoContorno.at(j) << " ó ";
+			} else{
+				cout << tipoContorno.at(j) << "." << endl;
+			}
+		}
+	}
 
 }
 
@@ -122,30 +150,33 @@ Mat umbralizarAdaptativo(Mat imagen){
  */
 vector<vector<Point>> obtenerBlops(Mat imagen){
 
-	vector<vector<Point> > contornos;	// Vector para puntos del contorno.
-	vector<vector<Point> > contornos1;	// Vector para puntos del contorno.
-	vector<vector<Point> > contornos2;	// Vector para puntos del contorno.
-	vector<vector<Point> > contornos3;	// Vector para puntos del contorno.
+	vector<vector<Point>> contornos;	// Vector para puntos del contorno.
 	vector<Vec4i> jerarquia;		// Vector para la jerarquía.
-	vector<Vec4i> jerarquia1;		// Vector para la jerarquía.
-	vector<Vec4i> jerarquia2;		// Vector para la jerarquía.
-	vector<Vec4i> jerarquia3;		// Vector para la jerarquía.
+
+	// Se obtienen los contornos.
+	findContours(imagen, contornos, jerarquia,
+			CV_RETR_TREE, CV_CHAIN_APPROX_NONE, Point(0, 0));
+
+	return contornos;
+
+}
+
+/*
+ * Método que muestra los blops por pantalla.
+ */
+void dibujarBlops(int indice, Mat imagen, string objeto){
+
+	vector<vector<Point>> contornos;	// Vector para puntos del contorno.
+	vector<Vec4i> jerarquia;		// Vector para la jerarquía.
 
 	// Se obtienen los contornos.
 	findContours(imagen, contornos, jerarquia,
 			CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0));
-	findContours(imagen, contornos1, jerarquia1,
-			CV_RETR_LIST, CV_CHAIN_APPROX_NONE, Point(0, 0));
-	findContours(imagen, contornos2, jerarquia2,
-			CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0));
-	findContours(imagen, contornos3, jerarquia3,
-			CV_RETR_TREE, CV_CHAIN_APPROX_NONE, Point(0, 0));
 
 	// Se dibujan los contornos.
 	RNG rng(12345);		// Variable para mostrar contornos.
 	Mat drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( uint i = 0; i< contornos.size(); i++ )
-	{
+	for(int i = 0; i< contornos.size(); i++){
 		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
 		drawContours(drawing, contornos, i, color, CV_FILLED, 8, jerarquia, 0, Point());
 	}
@@ -153,42 +184,6 @@ vector<vector<Point>> obtenerBlops(Mat imagen){
 	/// Se muestra la imagen.
 	namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
 	imshow( "Contours", drawing );
-
-	drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( uint i = 0; i< contornos1.size(); i++ )
-	{
-		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos1, i, color, CV_FILLED, 8, jerarquia1, 0, Point());
-	}
-
-	/// Show in a window
-	namedWindow( "Contours1", CV_WINDOW_AUTOSIZE );
-	imshow( "Contours1", drawing );
-
-	drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( uint i = 0; i< contornos2.size(); i++ )
-	{
-		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos2, i, color, CV_FILLED, 8, jerarquia2, 0, Point());
-	}
-
-	/// Show in a window
-	namedWindow( "Contours2", CV_WINDOW_AUTOSIZE );
-	imshow( "Contours2", drawing );
-
-	drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( uint i = 0; i< contornos3.size(); i++ )
-	{
-		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos3, i, color, CV_FILLED, 8, jerarquia3, 0, Point());
-	}
-
-	/// Show in a window
-	namedWindow( "Contours3", CV_WINDOW_AUTOSIZE );
-	imshow( "Contours3", drawing );
-
-	return contornos;
-
 }
 
 /*
