@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
 
 	argc = 2;
 	argv[0] = "reconocer";
-	argv[1] = "./clasificarT2/reco1.pgm";
+	argv[1] = "./imagenesT2/reco1.pgm";
 
 	if(argc != 2) {			// Comprueba el número de argumentos.
 		cout << "Usar: reconocer [fichero]" << endl;
@@ -37,9 +37,9 @@ void reconocer(string fich) {
 	contornos = obtenerBlops(imgUm);			// Obtenemos los blops.
 	obtenerDescriptores(contornos, fich);		// Obtenemos los descriptores.
 
-	for(int i = 0; i < descriptores.size(); i++) {		// Se recorren los descriptores.
+	for(uint i = 0; i < descriptores.size(); i++) {		// Se recorren los descriptores.
 		tipoContorno.clear();			// Se vacía el vector.
-		for(int j = 0; j < objetos.size(); j++) {		// Se recorren los objetos.
+		for(uint j = 0; j < objetos.size(); j++) {		// Se recorren los objetos.
 			leerDatos(objetos.at(j));		// Se leen los datos del objeto.
 			float distM = mahalanobis(i);		// Se calcula la distancia a ese objeto.
 			if(distM <= valChi){		// Si cumple el criterio.
@@ -102,7 +102,7 @@ void mostrarResultados(){
 	} else{
 		// Se recorren las clases de ese contorno.
 		cout << "El objeto es ";
-		for (int j = 0; j < tipoContorno.size(); j++){
+		for (uint j = 0; j < tipoContorno.size(); j++){
 			if(j != tipoContorno.size() - 1){
 				cout << tipoContorno.at(j) << " ó ";
 			} else{
@@ -176,10 +176,8 @@ void dibujarBlops(int indice, Mat imagen, string objeto){
 	// Se dibujan los contornos.
 	RNG rng(12345);		// Variable para mostrar contornos.
 	Mat drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for(int i = 0; i< contornos.size(); i++){
-		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos, i, color, CV_FILLED, 8, jerarquia, 0, Point());
-	}
+	Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+	drawContours(drawing, contornos, indice, color, CV_FILLED, 8, jerarquia, 0, Point());
 
 	/// Se muestra la imagen.
 	namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
@@ -196,11 +194,11 @@ void obtenerDescriptores(vector<vector<Point>> contornos, string nombre){
 	Vec<float,numParametros> momentos;		// Momentos del objeto.
 
 	// Se calculan los momentos para cada objeto.
-	for(int i = 0; i < contornos.size(); i++){
+	for(uint i = 0; i < contornos.size(); i++){
 		mu[i] = moments(contornos[i], false);
 	}
 
-	for(int i = 0; i < contornos.size(); i++){
+	for(uint i = 0; i < contornos.size(); i++){
 		// Se comprueba si es el contorno válido.
 		if(contornos.size() == 1 || (contornos.size() > 1 && mu[i].m00 > 500)){
 			momentos[0] = mu[i].m00;	// Se obtiene el área.
