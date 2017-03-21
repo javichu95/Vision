@@ -10,7 +10,7 @@ float mahalanobis(int);			// Método que calcula la distancia de mahalanobis.
 void mostrarResultados();		// Método que muestra los resultados por pantalla.
 
 // Variables globales utilizadas.
-const string fichObjetos = "objetos.yml";
+const string fichObjetos = "objetosEstimado.yml";
 Vec<float,5> media;			// Media de cada parámetro.
 Vec<float,5> varianza;			// Varianza de cada parámetro.
 // Tipos de objetos a reconocer.

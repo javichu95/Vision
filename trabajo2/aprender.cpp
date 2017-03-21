@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
 
 	// Filestorage para almacenar los objetos (modo escritura).
 	fs = FileStorage(fichObjetos, FileStorage::WRITE);
+	fsEstimada = FileStorage(fichObjetosEst, FileStorage::WRITE);
 	for(uint i = 0; i< objetos.size(); i++) {
 		aprendizaje(objetos.at(i));		// Se aprenden los distintos objetos.
 	}
@@ -102,6 +103,7 @@ void calcularDatos(int num) {
 	// Se inicializan a 0 media y varianza.
 	media = {0.0, 0.0, 0.0, 0.0, 0.0};
 	varianza = {0.0, 0.0, 0.0, 0.0, 0.0};
+	varianzaEstimada = {0.0, 0.0, 0.0, 0.0, 0.0};
 
 	// Se calculan los valores para cada descriptor.
 	for(uint i = 0; i < descriptores.size(); i++) {
@@ -122,6 +124,13 @@ void calcularDatos(int num) {
 
 	varianza = varianza / (num-1);		// Se calcula la varianza.
 
+	//Se calcula la varianza estimada.
+	varianzaEstimada = (media*porcentaje);
+	for(uint i = 0; i < numParametros; i++) {
+			// Se calcula la varianza.
+			varianzaEstimada[i] = varianzaEstimada[i]*varianzaEstimada[i];
+	}
+
 }
 
 /*
@@ -133,6 +142,9 @@ void escribirDatos(string objeto, int num) {
 	fs << objeto + "_" + "numero" << "[";
 	fs << num;
 	fs << "]";
+	fsEstimada << objeto + "_" + "numero" << "[";
+	fsEstimada << num;
+	fsEstimada << "]";
 	for(int i = 0; i < numParametros; i++) {
 		// Se escriben la media y varianza de cada descriptor.
 		fs << objeto + "_" + parametros[i] + "_" + "media" << "[";
@@ -141,6 +153,13 @@ void escribirDatos(string objeto, int num) {
 		fs << objeto + "_" + parametros[i] + "_" + "varianza" << "[";
 		fs << varianza[i];
 		fs << "]";
+
+		fsEstimada << objeto + "_" + parametros[i] + "_" + "media" << "[";
+		fsEstimada << media[i];
+		fsEstimada << "]";
+		fsEstimada << objeto + "_" + parametros[i] + "_" + "varianza" << "[";
+		fsEstimada << varianzaEstimada[i];
+		fsEstimada << "]";
 	}
 
 }
