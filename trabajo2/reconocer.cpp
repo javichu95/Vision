@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
 
 	argc = 2;
 	argv[0] = "reconocer";
-	argv[1] = "./imagenesT2/reco1.pgm";
+	argv[1] = "./clasificarT2/reco3.pgm";
 
 	if(argc != 2) {			// Comprueba el número de argumentos.
 		cout << "Usar: reconocer [fichero]" << endl;
@@ -27,6 +27,7 @@ void reconocer(string fich) {
 	vector<vector<Point>> contornos;	// Vector para los contornos.
 	Mat imgUm;		// Matriz para la imagen umbralizada.
 
+	// Se lee la imagen.
 	Mat img = imread(fich,CV_LOAD_IMAGE_GRAYSCALE);
 	if(!img.data){		// Se comprueba si se puede leer la imagen.
 		cout <<  "No se puede abrir la imagen: " << fich << endl ;
@@ -35,18 +36,20 @@ void reconocer(string fich) {
 
 	imgUm = umbralizarOtsu(img);		// Umbralizamos la imagen.
 	contornos = obtenerBlops(imgUm);			// Obtenemos los blops.
-	obtenerDescriptores(contornos, fich);		// Obtenemos los descriptores.
+	obtenerDescriptores(contornos);		// Obtenemos los descriptores.
 
-	for(uint i = 0; i < descriptores.size(); i++) {		// Se recorren los descriptores.
+	for(int i = 0; i < descriptores.size(); i++) {		// Se recorren los descriptores.
 		tipoContorno.clear();			// Se vacía el vector.
-		for(uint j = 0; j < objetos.size(); j++) {		// Se recorren los objetos.
+		for(int j = 0; j < objetos.size(); j++) {		// Se recorren los objetos.
 			leerDatos(objetos.at(j));		// Se leen los datos del objeto.
 			float distM = mahalanobis(i);		// Se calcula la distancia a ese objeto.
 			if(distM <= valChi){		// Si cumple el criterio.
 				tipoContorno.push_back(objetos.at(j));		// Se añade a la lista.
 			}
 		}
-		dibujarBlops(i,imgUm,"blop");
+		int indiceBlop = indicesBlop.front();		// Se saca el índice del blop.
+		indicesBlop.pop_front();			// Se elimina el índice de la lista.
+		dibujarBlops(indiceBlop,imgUm,"blop");		// Se dibuja el blop.
 		mostrarResultados();		// Se muestran los resultados.
 		waitKey(0);
 	}
@@ -54,12 +57,13 @@ void reconocer(string fich) {
 }
 
 /*
- * Método que lee los datos del fichero objetos.
+ * Método que lee los datos del fichero de objetos (media y varianza de cada momento).
  */
 void leerDatos(string objeto) {
 
 	fs = FileStorage(fichObjetos, FileStorage::READ);		// Se abre el fichero para lectura.
-	for(int i = 0; i < numParametros; i++) {
+
+	for(int i = 0; i < numParametros; i++) {		// Se recorren los parámetros.
 		FileNode n;		// Nodo para leer los datos.
 		FileNodeIterator itPar;		// Iterador para recorrer la lista de parámetros.
 		// Obtenemos el nodo de los parámetros.
@@ -120,28 +124,12 @@ Mat umbralizarOtsu(Mat imagen){
 
 	// Aplicamos el threshold.
 	threshold(imagen,imagen,0,255,THRESH_BINARY_INV | THRESH_OTSU);
+
+	// Muestra la imagen por pantalla.
 	namedWindow( "Otsu", CV_WINDOW_AUTOSIZE );
 	imshow("Otsu", imagen);
+
 	return imagen;	// Devolvemos la matriz.
-
-}
-
-
-/*
- * Método que umbraliza según el método adaptativo.
- */
-Mat umbralizarAdaptativo(Mat imagen){
-
-	Mat imagen1, imagen2;
-
-	// Aplicamos el threshold.
-	adaptiveThreshold(imagen,imagen1,255,ADAPTIVE_THRESH_MEAN_C,THRESH_BINARY_INV,51,2);
-	namedWindow( "Adaptativo media", CV_WINDOW_AUTOSIZE );
-	imshow("Adaptativo media", imagen1);
-	adaptiveThreshold(imagen,imagen2,255,ADAPTIVE_THRESH_GAUSSIAN_C,THRESH_BINARY_INV,51,2);
-	namedWindow( "Adaptativo gauss", CV_WINDOW_AUTOSIZE );
-	imshow("Adaptativo gauss", imagen1);
-	return imagen;			// Devolvemos la matriz.
 
 }
 
@@ -155,9 +143,9 @@ vector<vector<Point>> obtenerBlops(Mat imagen){
 
 	// Se obtienen los contornos.
 	findContours(imagen, contornos, jerarquia,
-			CV_RETR_TREE, CV_CHAIN_APPROX_NONE, Point(0, 0));
+			CV_RETR_LIST, CV_CHAIN_APPROX_NONE, Point(0, 0));
 
-	return contornos;
+	return contornos;		// Se devuelven los contornos.
 
 }
 
@@ -171,7 +159,7 @@ void dibujarBlops(int indice, Mat imagen, string objeto){
 
 	// Se obtienen los contornos.
 	findContours(imagen, contornos, jerarquia,
-			CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0));
+			CV_RETR_LIST, CV_CHAIN_APPROX_NONE, Point(0, 0));
 
 	// Se dibujan los contornos.
 	RNG rng(12345);		// Variable para mostrar contornos.
@@ -180,25 +168,26 @@ void dibujarBlops(int indice, Mat imagen, string objeto){
 	drawContours(drawing, contornos, indice, color, CV_FILLED, 8, jerarquia, 0, Point());
 
 	/// Se muestra la imagen.
-	namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-	imshow( "Contours", drawing );
+	namedWindow(objeto, CV_WINDOW_AUTOSIZE );
+	imshow(objeto, drawing );
+
 }
 
 /*
  * Método que obtiene los descriptores de la imagen.
  */
-void obtenerDescriptores(vector<vector<Point>> contornos, string nombre){
+void obtenerDescriptores(vector<vector<Point>> contornos){
 
 	vector<Moments> mu(contornos.size());	// Vector para los momentos.
 	double inv[7];		// Array para guardar los momentos invariantes.
 	Vec<float,numParametros> momentos;		// Momentos del objeto.
 
 	// Se calculan los momentos para cada objeto.
-	for(uint i = 0; i < contornos.size(); i++){
+	for(int i = 0; i < contornos.size(); i++){
 		mu[i] = moments(contornos[i], false);
 	}
 
-	for(uint i = 0; i < contornos.size(); i++){
+	for(int i = 0; i < contornos.size(); i++){
 		// Se comprueba si es el contorno válido.
 		if(contornos.size() == 1 || (contornos.size() > 1 && mu[i].m00 > 500)){
 			momentos[0] = mu[i].m00;	// Se obtiene el área.
@@ -211,6 +200,7 @@ void obtenerDescriptores(vector<vector<Point>> contornos, string nombre){
 			momentos[3] = inv[1];
 			momentos[4] = inv[2];
 			descriptores.push_back(momentos);		// Se añaden los descriptores.
+			indicesBlop.push_back(i);		// Se añade el índice a la lista.
 		}
 	}
 

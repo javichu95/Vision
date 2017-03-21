@@ -17,10 +17,9 @@ void reconocer(string fich);	// Reconoce los objetos de la imagen dada.
 float mahalanobis(int);			// Método que calcula la distancia de mahalanobis.
 void mostrarResultados();		// Método que muestra los resultados por pantalla.
 Mat umbralizarOtsu(Mat);		// Método que umbraliza según el método Otsu.
-Mat umbralizarAdaptativo(Mat);	// Método que umbraliza según el método de Adaptativo.
 vector<vector<Point>> obtenerBlops(Mat);		// Método que obtiene los blops.
 void dibujarBlops(int,Mat,string);			// Método que dibuja los blops.
-void obtenerDescriptores(vector<vector<Point>>,string);	// Método que obtiene los descriptores.
+void obtenerDescriptores(vector<vector<Point>>);	// Método que obtiene los descriptores.
 void mostrarHistograma(string,Mat);	// Método que muestra el histograma por pantalla.
 
 // Variables globales utilizadas.
@@ -37,5 +36,6 @@ FileStorage fs;		// Filestorage para leer los objetos.
 float alfa = 0.05;				// Variable para el test chi-cuadrado.
 float valChi = 11.0705;			// Valor de la chi-cuadrado para 5 grados de libertad.
 vector<string> tipoContorno;		// Vector con las clases que corresponden al contorno.
+list<int> indicesBlop;		// Vector con los índices del blop.
 
 #endif
