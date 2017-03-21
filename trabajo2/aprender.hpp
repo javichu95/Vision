@@ -15,16 +15,15 @@ using namespace std;
 void leerArchivos(string);	// Función que lee los archivos de un directorio.
 void aprendizaje(string objeto); // Método que itera sobre diferentes objetos.
 Mat umbralizarOtsu(Mat);		// Método que umbraliza según el método Otsu.
-Mat umbralizarAdaptativo(Mat);	// Método que umbraliza según el método de Adaptativo.
 vector<vector<Point>> obtenerBlops(Mat);		// Método que obtiene los blops.
-void obtenerDescriptores(vector<vector<Point>>,string);	// Método que obtiene los descriptores.
+void obtenerDescriptores(vector<vector<Point>>);	// Método que obtiene los descriptores.
 void mostrarHistograma(string,Mat);	// Método que muestra el histograma por pantalla.
 void calcularDatos(int);		// Método que calcula las medias y varianzas.
 void escribirDatos(string,int); 		// Escribe los datos en el fichero.
 
 // Variables globales utilizadas.
 list<string> ficheros;		// Nombre de todos los ficheros del directorio.
-const string fichObjetos = "objetos.yml";
+const string fichObjetos = "objetos.yml";			// Variable con el nombre del fichero de objetos.
 // Tipo enumerado para los parámetros.
 enum{AREA = 0, PERIMETRO = 1, INV_1 = 2, INV_2 = 3, INV_3 = 4};
 // Parámetros o descriptores de cada objeto.

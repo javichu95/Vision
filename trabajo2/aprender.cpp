@@ -3,7 +3,7 @@
 /*
  * Método principal que lanza la ejecución de todo el programa.
  */
-/*int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 
 	argc = 2;
 	argv[0] = "aprender";
@@ -25,7 +25,7 @@
 	fs.release();		// Se libera el fichero.
 	return 0;
 
-}*/
+}
 
 /*
  * Método que lee los archivos de un cierto directorio y los
@@ -46,7 +46,7 @@ void leerArchivos(string dir){
 				cout << "Leyendo fichero: " << dir << "/" << elem << endl;
 				ficheros.push_back(dir+"/"+elem);		// Se guarda el fichero en la lista.
 			}
-			elemento = readdir(directorio);	// Se leen los elementos.
+			elemento = readdir(directorio);	// Se lee el siguiente elemento.
 		}
 	} else{		// Si no se puede leer, se muestra el error.
 		cout << "El directorio no se puede leer." << endl;
@@ -60,11 +60,11 @@ void leerArchivos(string dir){
  */
 void aprendizaje(string objeto) {
 
-	Mat imagen1, imagen2;		// Imagen devuelta por cada método.
+	Mat imagen;		// Imagen umbralizada.
 	vector<vector<Point>> contornos;	// Vector para los contornos.
 
 	list<string>::iterator it;		// Iterador para recorrer los ficheros.
-	int n = 0;			//Numero de imagenes de un mismo tipo.
+	int n = 0;			// Número de imágenes de un mismo tipo.
 	for(it = ficheros.begin(); it != ficheros.end(); it++){		// Recorremos las imágenes.
 		string nombre = *it;	// Nombre del fichero.
 		// Se comprueba a que objeto corresponde.
@@ -77,9 +77,9 @@ void aprendizaje(string objeto) {
 			}
 
 			mostrarHistograma("Histograma", imagen);		// Se muestra el histograma.
-			imagen1 = umbralizarOtsu(imagen);		// Umbralizamos la imagen.
-			contornos = obtenerBlops(imagen1);			// Obtenemos los blops.
-			obtenerDescriptores(contornos,nombre);			// Obtenemos los descriptores.
+			imagen = umbralizarOtsu(imagen);		// Umbralizamos la imagen.
+			contornos = obtenerBlops(imagen);			// Obtenemos los blops.
+			obtenerDescriptores(contornos);			// Obtenemos los descriptores.
 			n++;			// Se actualiza el número de ficheros de un mismo tipo.
 			waitKey(0);
 
@@ -105,103 +105,38 @@ Mat umbralizarOtsu(Mat imagen){
 
 }
 
-
-/*
- * Método que umbraliza según el método adaptativo.
- */
-Mat umbralizarAdaptativo(Mat imagen){
-
-	Mat imagen1, imagen2;
-
-	// Aplicamos el threshold.
-	adaptiveThreshold(imagen,imagen1,255,ADAPTIVE_THRESH_MEAN_C,THRESH_BINARY_INV,51,2);
-	namedWindow( "Adaptativo media", CV_WINDOW_AUTOSIZE );
-	imshow("Adaptativo media", imagen1);
-	adaptiveThreshold(imagen,imagen2,255,ADAPTIVE_THRESH_GAUSSIAN_C,THRESH_BINARY_INV,51,2);
-	namedWindow( "Adaptativo gauss", CV_WINDOW_AUTOSIZE );
-	imshow("Adaptativo gauss", imagen1);
-	return imagen;			// Devolvemos la matriz.
-
-}
-
 /*
  * Método que obtiene los distintos blops de la imagen.
  */
 vector<vector<Point>> obtenerBlops(Mat imagen){
 
 	vector<vector<Point> > contornos;	// Vector para puntos del contorno.
-	vector<vector<Point> > contornos1;	// Vector para puntos del contorno.
-	vector<vector<Point> > contornos2;	// Vector para puntos del contorno.
-	vector<vector<Point> > contornos3;	// Vector para puntos del contorno.
 	vector<Vec4i> jerarquia;		// Vector para la jerarquía.
-	vector<Vec4i> jerarquia1;		// Vector para la jerarquía.
-	vector<Vec4i> jerarquia2;		// Vector para la jerarquía.
-	vector<Vec4i> jerarquia3;		// Vector para la jerarquía.
 
 	// Se obtienen los contornos.
 	findContours(imagen, contornos, jerarquia,
-			CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0));
-	findContours(imagen, contornos1, jerarquia1,
 			CV_RETR_LIST, CV_CHAIN_APPROX_NONE, Point(0, 0));
-	findContours(imagen, contornos2, jerarquia2,
-			CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0));
-	findContours(imagen, contornos3, jerarquia3,
-			CV_RETR_TREE, CV_CHAIN_APPROX_NONE, Point(0, 0));
 
 	// Se dibujan los contornos.
 	RNG rng(12345);		// Variable para mostrar contornos.
 	Mat drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( uint i = 0; i< contornos.size(); i++ )
-	{
+	for(int i = 0; i< contornos.size(); i++){
 		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
 		drawContours(drawing, contornos, i, color, CV_FILLED, 8, jerarquia, 0, Point());
 	}
 
-	/// Se muestra la imagen.
-	namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-	imshow( "Contours", drawing );
+	// Se muestra la imagen.
+	namedWindow("Contornos", CV_WINDOW_AUTOSIZE);
+	imshow("Contornos", drawing);
 
-	drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( uint i = 0; i< contornos1.size(); i++ )
-	{
-		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos1, i, color, CV_FILLED, 8, jerarquia1, 0, Point());
-	}
-
-	/// Show in a window
-	namedWindow( "Contours1", CV_WINDOW_AUTOSIZE );
-	imshow( "Contours1", drawing );
-
-	drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( uint i = 0; i< contornos2.size(); i++ )
-	{
-		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos2, i, color, CV_FILLED, 8, jerarquia2, 0, Point());
-	}
-
-	/// Show in a window
-	namedWindow( "Contours2", CV_WINDOW_AUTOSIZE );
-	imshow( "Contours2", drawing );
-
-	drawing = Mat::zeros(imagen.size(), CV_8UC3);
-	for( uint i = 0; i< contornos3.size(); i++ )
-	{
-		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours(drawing, contornos3, i, color, CV_FILLED, 8, jerarquia3, 0, Point());
-	}
-
-	/// Show in a window
-	namedWindow( "Contours3", CV_WINDOW_AUTOSIZE );
-	imshow( "Contours3", drawing );
-
-	return contornos;
+	return contornos;			// Se devuelven los contornos.
 
 }
 
 /*
  * Método que obtiene los descriptores de la imagen.
  */
-void obtenerDescriptores(vector<vector<Point>> contornos, string nombre){
+void obtenerDescriptores(vector<vector<Point>> contornos){
 
 	vector<Moments> mu(contornos.size());	// Vector para los momentos.
 	double inv[7];		// Array para guardar los momentos invariantes.
