@@ -6,10 +6,6 @@
  */
 int main(int argc, char *argv[]) {
 
-	argc = 2;
-	argv[0] = "reconocer";
-	argv[1] = "./imagenesT2/reco3.pgm";
-
 	if(argc != 2) {			// Comprueba el número de argumentos.
 		cout << "Usar: reconocer [fichero]" << endl;
 		return 0;

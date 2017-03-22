@@ -5,16 +5,13 @@
  */
 int main(int argc, char *argv[]) {
 
-	argc = 2;
-	argv[0] = "aprender";
-	argv[1] = "./imagenesT2";
-
 	if(argc != 2) {			// Comprueba el número de argumentos.
-		cout << "Usar: entrenar [directorio]" << endl;
+		cout << "Usar: aprender [directorio]" << endl;
 		return 0;
 	}
 
-	leerArchivos("./imagenesT2");		// Se leen los archivos de la carpeta.
+	string carpeta = argv[1];
+	leerArchivos(carpeta);		// Se leen los archivos de la carpeta.
 
 	// Filestorage para almacenar los objetos (modo escritura).
 	fs = FileStorage(fichObjetos, FileStorage::WRITE);
