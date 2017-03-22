@@ -26,6 +26,6 @@ Vec<float,5> varianza;			// Varianza de cada parámetro.
 Vec<float,5> varianzaEstimada;			// Varianza estimada de cada parámetro.
 vector<Vec<float,5>> descriptores;		// Vector con los descriptores de un objeto.
 list<int> indicesBlop;					// Vector con los índices del blop.
-double porcentaje = 0.1;				// Porcentaje con el que estimar la varianza.
+double porcentaje = 0.03;				// Porcentaje con el que estimar la varianza.
 
 #endif
