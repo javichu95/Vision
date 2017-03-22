@@ -133,7 +133,7 @@ void calcularDatos(int num) {
 
 	float numMuestras = (float)(num);
 
-	varianzaEstimada = varianza/numMuestras + (numMuestras-1)/numMuestras*varianzaEstimada;
+	varianzaEstimada = varianzaEstimada/numMuestras + (numMuestras-1)/numMuestras*varianza;
 
 }
 
