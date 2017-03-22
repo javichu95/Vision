@@ -124,15 +124,15 @@ void calcularDatos(int num) {
 
 	varianza = varianza / (num-1);		// Se calcula la varianza.
 
-	//Se calcula la varianza estimada.
+	// Se calcula la varianza estimada.
 	varianzaEstimada = (media*porcentaje);
 	for(uint i = 0; i < numParametros; i++) {
 		// Se calcula la varianza.
 		varianzaEstimada[i] = varianzaEstimada[i]*varianzaEstimada[i];
 	}
 
+	// Se usa la vairanza estimada.
 	float numMuestras = (float)(num);
-
 	varianzaEstimada = varianzaEstimada/numMuestras + (numMuestras-1)/numMuestras*varianza;
 
 }
@@ -158,6 +158,7 @@ void escribirDatos(string objeto, int num) {
 		fs << varianza[i];
 		fs << "]";
 
+		// Se escriben los valores estimados.
 		fsEstimada << objeto + "_" + parametros[i] + "_" + "media" << "[";
 		fsEstimada << media[i];
 		fsEstimada << "]";
