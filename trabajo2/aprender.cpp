@@ -127,9 +127,13 @@ void calcularDatos(int num) {
 	//Se calcula la varianza estimada.
 	varianzaEstimada = (media*porcentaje);
 	for(uint i = 0; i < numParametros; i++) {
-			// Se calcula la varianza.
-			varianzaEstimada[i] = varianzaEstimada[i]*varianzaEstimada[i];
+		// Se calcula la varianza.
+		varianzaEstimada[i] = varianzaEstimada[i]*varianzaEstimada[i];
 	}
+
+	float numMuestras = (float)(num);
+
+	varianzaEstimada = varianza/numMuestras + (numMuestras-1)/numMuestras*varianzaEstimada;
 
 }
 
