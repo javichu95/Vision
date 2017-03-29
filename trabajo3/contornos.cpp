@@ -36,7 +36,7 @@ void fugaImagen(string imagen){
 	// Se lee la imagen.
 	Mat img = imread(imagen, CV_LOAD_IMAGE_GRAYSCALE);
 
-	cout << "Leyengo imagen: " << imagen << "..." << endl;
+	cout << "Leyendo imagen: " << imagen << "..." << endl;
 
 	if(!img.data){		// Se comprueba si se puede leer la imagen.
 		cout <<  "No se puede abrir la imagen: " << imagen << endl ;
@@ -65,12 +65,20 @@ void fugaImagen(string imagen){
 	grad_x = (grad_x/2)+128;
 	grad_y = (grad_y/2)+128;
 
+	Mat angle = Mat(grad_x.rows, grad_x.cols, CV_32F);
+
+	for(int i = 0; i < grad_x.cols; i++) {
+		for(int j = 0; j < grad_x.rows; j++) {
+			angle.at<float>(i,j) = atan2(grad_y.at<float>(i, j), grad_x.at<float>(i,j));
+		}
+	}
+
 	namedWindow("GradienteX");
 	imshow("GradienteX", grad_x);
 	namedWindow("GradienteY");
 	imshow("GradienteY", grad_y);
-	namedWindow("Modulo");
-	imshow("Modulo", (modulo/4)/255);
+	//namedWindow("Modulo");
+	//imshow("Modulo", (modulo/4)/255);
 	namedWindow("Orientacion");
 	imshow("Orientacion", ((angle/CV_PI)*128)/255);
 
@@ -102,7 +110,7 @@ void fugaReal(){
 /*
  * Método que calcula la transformada de Hough de una cierta imagen.
  */
-void transformada(Mat imagen){
+/*void transformada(Mat imagen){
 
 	int x, y;		// Variables para los ejes.
 
@@ -115,4 +123,4 @@ void transformada(Mat imagen){
 			votar ;
 		}
 	}
-}
+}*/
