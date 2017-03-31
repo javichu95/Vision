@@ -13,6 +13,6 @@ void fugaImagen(string);		// Método para obtener punto de fuga en una imagen.
 void fugaReal();		// Método para obtener punto de fuga en tiempo real.
 Mat aplicarFiltro(Mat, int, int, double, double);		// Método que aplica un filtro gaussiano.
 void mostrarMatriz(Mat, string);		// Método que muestra una matríz por pantalla.
-void transformada(Mat);		// Método que calcula la transformada de Hough.
+void transformada(Mat imagen, Mat orientacion, Mat modulo);		// Método que calcula la transformada de Hough.
 
 #endif

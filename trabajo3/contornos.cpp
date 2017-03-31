@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
 
 	argc = 2;
-	argv[1] = "imagenesT3/poster.pgm";
+	argv[1] = (char*)("imagenesT3/pasillo1.pgm");
 
 	if(argc > 2 ) {			// Comprueba el número de argumentos.
 		cout << "Usar: contornos ó contornos [imagen]" << endl;
@@ -32,9 +32,8 @@ int main(int argc, char *argv[]) {
  * pasada como argumento.
  */
 void fugaImagen(string imagen){
-
 	// Matrices para el gradiente en cada eje, modulo y ángulo.
-	Mat grad_x, grad_y, modulo, angulo;
+	Mat orientacion, modulo, grad_x, grad_y;
 
 	// Se lee la imagen.
 	Mat img = imread(imagen, CV_LOAD_IMAGE_GRAYSCALE);
@@ -64,33 +63,25 @@ void fugaImagen(string imagen){
 	Sobel(img, grad_y, CV_32F, 0, 1, 3);
 	//Scharr( src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
 
-	// Se normalizan los valores.
-	grad_x = (grad_x/2)+128;
-	grad_y = -(grad_y/2)+128;
+	grad_y = -grad_y;
 
 	// Se muestran los gradientes por pantalla.
-	Mat mostrar = ((grad_x/2)+128)/255;
+	Mat mostrar = (grad_x/2+128)/255;
 	mostrarMatriz(mostrar, "Gradiente X");
-	mostrar = ((grad_y/2)+128)/255;
+	mostrar = (grad_y/2+128)/255;
 	mostrarMatriz(mostrar, "Gradiente Y");
 
 	// Se obtiene el módulo y ángulo.
-	cartToPolar(grad_x, grad_y, modulo, angulo);
+	cartToPolar(grad_x, grad_y, modulo, orientacion);
 
-	//Mat angle = Mat(grad_x.rows, grad_x.cols, CV_32F);
-
-	/*for(int i = 0; i < grad_x.cols; i++) {
-		for(int j = 0; j < grad_x.rows; j++) {
-			angle.at<float>(i,j) = atan2(grad_y.at<float>(i, j), grad_x.at<float>(i,j));
-		}
-	}*/
-
-	//namedWindow("Modulo");
-	//imshow("Modulo", (modulo/4)/255);
-	//namedWindow("Orientacion");
-	//imshow("Orientacion", ((angle/CV_PI)*128)/255);
+	namedWindow("Modulo");
+	imshow("Modulo", (modulo/4)/255);
+	namedWindow("Orientacion");
+	imshow("Orientacion", ((orientacion/CV_PI)*128)/255);
 
 	waitKey(0);
+
+	transformada(img, orientacion, modulo);
 }
 
 /*
@@ -141,17 +132,20 @@ void fugaReal(){
 /*
  * Método que calcula la transformada de Hough de una cierta imagen.
  */
-/*void transformada(Mat imagen){
+void transformada(Mat imagen, Mat orientacion, Mat modulo){
 
 	int x, y;		// Variables para los ejes.
-
+	float umbral = 0.0;
 	for(int i = 0; i < imagen.rows; i++){		// Se recorren las filas.
 		for(int j = 0; j < imagen.cols; j++){	// Se recorren las columnas.
-			x = j - imagen.cols/2;
-			y = imagen.rows/2 - i;
-			theta = imagen.at(i,j);
-			rho = ;
-			votar ;
+			if(modulo.at<float>(i,j) > umbral) {
+				x = j - imagen.cols/2;
+				y = imagen.rows/2 - i;
+				float theta = orientacion.at<float>(i,j);
+				float rho = x*cosf(theta) + y*sinf(theta);
+				cout << theta << " " << rho << endl;
+				//votar ;
+			}
 		}
 	}
-}*/
+}
