@@ -33,8 +33,12 @@ int main(int argc, char *argv[]) {
  */
 void fugaImagen(string imagen){
 
+	// Matrices para el gradiente en cada eje, modulo y ángulo.
+	Mat grad_x, grad_y, modulo, angulo;
+
 	// Se lee la imagen.
 	Mat img = imread(imagen, CV_LOAD_IMAGE_GRAYSCALE);
+	Mat img2;
 
 	cout << "Leyendo imagen: " << imagen << "..." << endl;
 
@@ -46,9 +50,11 @@ void fugaImagen(string imagen){
 	namedWindow("Imagen", CV_WINDOW_AUTOSIZE);	// Se crea una ventana.
 	imshow("Imagen", img);		// Se muestra la imagen.
 
-	// Matrices para el gradiente en cada eje.
-	Mat grad_x, grad_y;
-	Mat abs_grad_x, abs_grad_y;
+	// Se aplica un filtro gaussiano.
+	img = aplicarFiltro(img, 3, 3, 0, 0);
+
+	namedWindow("Imagen Filtro", CV_WINDOW_AUTOSIZE);	// Se crea una ventana.
+	imshow("Imagen Filtro", img);		// Se muestra la imagen.
 
 	// Gradiente en el eje X.
 	//Scharr( src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
@@ -58,31 +64,56 @@ void fugaImagen(string imagen){
 	Sobel(img, grad_y, CV_32F, 0, 1, 3);
 	//Scharr( src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
 
-	// Se obtiene el módulo y ángulo.
-	//cartToPolar(outputX, -outputY, modulo, angle);
-
-	// Se normalizan los valores para mostrarlos por pantalla.
+	// Se normalizan los valores.
 	grad_x = (grad_x/2)+128;
-	grad_y = (grad_y/2)+128;
+	grad_y = -(grad_y/2)+128;
 
-	Mat angle = Mat(grad_x.rows, grad_x.cols, CV_32F);
+	// Se muestran los gradientes por pantalla.
+	Mat mostrar = ((grad_x/2)+128)/255;
+	mostrarMatriz(mostrar, "Gradiente X");
+	mostrar = ((grad_y/2)+128)/255;
+	mostrarMatriz(mostrar, "Gradiente Y");
 
-	for(int i = 0; i < grad_x.cols; i++) {
+	// Se obtiene el módulo y ángulo.
+	cartToPolar(grad_x, grad_y, modulo, angulo);
+
+	//Mat angle = Mat(grad_x.rows, grad_x.cols, CV_32F);
+
+	/*for(int i = 0; i < grad_x.cols; i++) {
 		for(int j = 0; j < grad_x.rows; j++) {
 			angle.at<float>(i,j) = atan2(grad_y.at<float>(i, j), grad_x.at<float>(i,j));
 		}
-	}
+	}*/
 
-	namedWindow("GradienteX");
-	imshow("GradienteX", grad_x);
-	namedWindow("GradienteY");
-	imshow("GradienteY", grad_y);
 	//namedWindow("Modulo");
 	//imshow("Modulo", (modulo/4)/255);
-	namedWindow("Orientacion");
-	imshow("Orientacion", ((angle/CV_PI)*128)/255);
+	//namedWindow("Orientacion");
+	//imshow("Orientacion", ((angle/CV_PI)*128)/255);
 
 	waitKey(0);
+}
+
+/*
+ * Método que aplica un filtro gaussiano a la imagen.
+ */
+Mat aplicarFiltro(Mat imagen, int tamX, int tamY, double sigmaX, double sigmaY){
+
+	Mat filtrada;		// Matríz para la imagen filtrada.
+
+	// Se aplica el filtro.
+	GaussianBlur(imagen, filtrada, Size(tamX, tamY), sigmaX, sigmaY, BORDER_DEFAULT);
+
+	return filtrada;		// Se devuelve la matríz.
+
+}
+
+/*
+ * Método que muestra una matríz por pantalla.
+ */
+void mostrarMatriz(Mat matriz, string nombre){
+
+	namedWindow(nombre);		// Se da nombre a la ventana.
+	imshow(nombre, matriz);	// Se muestra la matríz.
 }
 
 /*
