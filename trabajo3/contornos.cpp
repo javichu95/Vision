@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
 
 	argc = 2;
-	argv[1] = (char*)("imagenesT3/pasillo1.pgm");
+	argv[1] = (char*)("imagenesT3/pasillo2.pgm");
 
 	if(argc > 2 ) {			// Comprueba el número de argumentos.
 		cout << "Usar: contornos ó contornos [imagen]" << endl;
@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
  * pasada como argumento.
  */
 void fugaImagen(string imagen){
+
 	// Matrices para el gradiente en cada eje, modulo y ángulo.
 	Mat orientacion, modulo, grad_x, grad_y;
 
@@ -56,14 +57,14 @@ void fugaImagen(string imagen){
 	imshow("Imagen Filtro", img);		// Se muestra la imagen.
 
 	// Gradiente en el eje X.
-	//Scharr( src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
+	//Scharr(src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
 	Sobel(img, grad_x, CV_32F, 1, 0, 3);
 
 	// Gradiente en el eje Y.
 	Sobel(img, grad_y, CV_32F, 0, 1, 3);
-	//Scharr( src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
+	//Scharr(src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
 
-	grad_y = -grad_y;
+	grad_y = -grad_y;			// Se invierte el eje.
 
 	// Se muestran los gradientes por pantalla.
 	Mat mostrar = (grad_x/2+128)/255;
@@ -74,14 +75,38 @@ void fugaImagen(string imagen){
 	// Se obtiene el módulo y ángulo.
 	cartToPolar(grad_x, grad_y, modulo, orientacion);
 
-	namedWindow("Modulo");
-	imshow("Modulo", (modulo/4)/255);
-	namedWindow("Orientacion");
-	imshow("Orientacion", ((orientacion/CV_PI)*128)/255);
+
+	for(int i=0; i<orientacion.rows; i++){
+		for(int j=0; j<orientacion.cols; j++){
+			cout << orientacion.at<float>(i,j) << endl;
+		}
+	}
+
+	// Se muestra el módulo por pantalla.
+	mostrar = (modulo/4)/255;
+	mostrarMatriz(mostrar, "Modulo");
+
+	// Se muestra el ángulo por pantalla.
+	mostrar = ((orientacion/CV_PI)*128)/255;
+	mostrarMatriz(mostrar, "Orientacion");
+
+	/*double maximo = 0.0;
+	for(int i=0; i<modulo.rows; i++){
+		for(int j=0; j<modulo.cols; j++){
+			cout << modulo.at<float>(i,j) << endl;
+			if(modulo.at<float>(i,j)>maximo){
+				maximo = modulo.at<float>(i,j);
+			}
+		}
+	}
+
+	cout << maximo << endl;*/
 
 	waitKey(0);
 
 	transformada(img, orientacion, modulo);
+
+	waitKey(0);
 }
 
 /*
@@ -132,20 +157,50 @@ void fugaReal(){
 /*
  * Método que calcula la transformada de Hough de una cierta imagen.
  */
-void transformada(Mat imagen, Mat orientacion, Mat modulo){
+int transformada(Mat imagen, Mat orientacion, Mat modulo){
 
-	int x, y;		// Variables para los ejes.
-	float umbral = 0.0;
+	int rectas[imagen.cols];	// Tabla con los votos de cada recta.
+	int x;		// Variable para el eje.
+	float umbral = 65.0;			// Valor umbral.
 	for(int i = 0; i < imagen.rows; i++){		// Se recorren las filas.
 		for(int j = 0; j < imagen.cols; j++){	// Se recorren las columnas.
 			if(modulo.at<float>(i,j) > umbral) {
 				x = j - imagen.cols/2;
-				y = imagen.rows/2 - i;
 				float theta = orientacion.at<float>(i,j);
-				float rho = x*cosf(theta) + y*sinf(theta);
-				cout << theta << " " << rho << endl;
-				//votar ;
+				int rho = x*cosf(theta);
+				cout << x << " " << theta << " " << rho << endl;
+				rectas[rho] = rectas[rho] + 1;
+				waitKey(0);
 			}
 		}
 	}
+
+
+
+	// Se definen las variables para el máximo.
+	int maximo = 0;
+	int maxIndice = 0;
+	for(int i = 0; i < imagen.cols; i++){		// Se recorren las posiciones.
+		if(rectas[i] > maximo){			// Si es mayor que el máximo actual...
+			// Se guarda su valor y su índice.
+			maximo = rectas[i];
+			maxIndice = i;
+		}
+	}
+
+	cout << "MAXIMO: " << maximo << endl;
+	cout << "MAX INDICE: " << maxIndice << endl;
+
+	circle(imagen, Point(maxIndice,imagen.rows/2), 1, CV_RGB(255,0,0), 10);
+	mostrarMatriz(imagen, "Imagen final");
+
+	return maxIndice;
+}
+
+/*
+ * Método que realiza la votación.
+ */
+void votar(){
+
+
 }
