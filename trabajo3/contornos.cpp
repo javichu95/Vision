@@ -160,17 +160,20 @@ void fugaReal(){
 int transformada(Mat imagen, Mat orientacion, Mat modulo){
 
 	int rectas[imagen.cols];	// Tabla con los votos de cada recta.
-	int x;		// Variable para el eje.
+	for(int i = 0; i < imagen.cols; i++) {
+		rectas[i] = 0;
+	}
+	int x = 0, y = 0;		// Variable para el eje.
 	float umbral = 65.0;			// Valor umbral.
 	for(int i = 0; i < imagen.rows; i++){		// Se recorren las filas.
 		for(int j = 0; j < imagen.cols; j++){	// Se recorren las columnas.
-			if(modulo.at<float>(i,j) > umbral) {
+			if(modulo.at<float>(i,j) >= umbral) {
 				x = j - imagen.cols/2;
+				y = imagen.rows/2 - i;
 				float theta = orientacion.at<float>(i,j);
-				int rho = x*cosf(theta);
+				int rho = x*cosf(theta) + y*sinf(theta);
 				cout << x << " " << theta << " " << rho << endl;
 				rectas[rho] = rectas[rho] + 1;
-				waitKey(0);
 			}
 		}
 	}
