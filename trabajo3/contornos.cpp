@@ -216,7 +216,7 @@ void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
      */
     if (a > 0.07) {		// Se comprueba si es línea vertical u horizontal (4 grados).
 
-
+    	ALEX NO MIRES LO QUE NO DEBES.......
     }
 
 }
