@@ -99,11 +99,10 @@ void fugaImagen(Mat img){
 
 	cout << "Columna máxima: " << maxIndice;
 
-	// Se señala con un círculo el punto de fuga y se muestra por pantalla.
-	circle(img, Point(maxIndice,img.rows/2), 1, CV_RGB(255,0,0), 10);
-	mostrarMatriz(img, "Imagen final");
+	dibujarX(maxIndice, img.rows/2, img);	// Se señala con una X el punto de fuga.
 
 	waitKey(0);			// Se pausa para ver los resultados.
+
 }
 
 /*
@@ -132,6 +131,7 @@ void mostrarMatriz(Mat matriz, string nombre){
 
 	namedWindow(nombre);		// Se da nombre a la ventana.
 	imshow(nombre, matriz);	// Se muestra la matriz.
+
 }
 
 /*
@@ -141,15 +141,18 @@ void mostrarPuntos(Mat imagen, Mat modulo){
 
 	for(int i = 0; i < modulo.rows; i++){		// Se recorren las filas.
 		for(int j = 0; j < modulo.cols; j++){		// Se recorren las columnas.
+
 			if(modulo.at<float>(i,j) > umbral){			// Se aplica el filtro por umbral.
 				// Se señala el punto en la imagen.
 				circle(imagen, Point(j,i), 1, CV_RGB(255,0,0));
 			}
+
 		}
 	}
 
 	// Se muestran los puntos que pasan el filtro.
 	mostrarMatriz(imagen, "Puntos de contorno");
+
 }
 
 /*
@@ -166,15 +169,15 @@ int transformada(Mat imagen, Mat orientacion, Mat modulo){
 	int x = 0, y = 0;		// Variable para el eje.
 	for(int i = 0; i < imagen.rows; i++){		// Se recorren las filas.
 		for(int j = 0; j < imagen.cols; j++){	// Se recorren las columnas.
+
 			if(modulo.at<float>(i,j) >= umbral) {
-				x = j - imagen.cols/2;
-				y = imagen.rows/2 - i;
+				x = j - imagen.cols/2;		// Se calcula el punto X.
+				y = imagen.rows/2 - i;		// Se calcula el punto Y.
 				float theta = orientacion.at<float>(i,j);
-				//cout << x << " " << theta << " " << rho << endl;
-				//circle(imagen, Point(j,i), 1, CV_RGB(255,0,0));
-				//imshow("Pasillo", imagen);
-				votar(rectas, x, y,j , i, theta, imagen);
+
+				votar(rectas, x, y,j , i, theta, imagen);	// Se vota el punto.
 			}
+
 		}
 	}
 
@@ -188,6 +191,7 @@ int transformada(Mat imagen, Mat orientacion, Mat modulo){
 	}
 
 	return maxIndice;		// Se devuelve el índice con mayor valor.
+
 }
 
 /*
@@ -201,7 +205,7 @@ void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
 
     if(a != dist){
     	cout << "Distancia obtenida: " << dist << " " << "A: " << a << endl;
-    	//waitKey(0);
+    	waitKey(0);
     }
 
     /*
@@ -227,6 +231,7 @@ void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
             //}
         }
     }
+
 }
 
 /*
@@ -241,23 +246,37 @@ float distEjes(float theta){
 	distancias[3] = abs(3*CV_PI/2 - theta);
 	distancias[4] = abs(2*CV_PI - theta);
 
-	//cout << "Theta: " << theta << endl;
+	cout << "Theta: " << theta << endl;
 
 	float minimo = 2*CV_PI;
 	for(int i = 0; i < 4; i++){
-		//cout << "Distancias: " << distancias[i] << endl;
+		cout << "Distancias: " << distancias[i] << endl;
 		if(distancias[i] < minimo){
 			minimo = distancias[i];
 		}
 	}
 
 	return minimo;			// Se devuelve el mínimo.
+
 }
 
 /*
  * Método que dibuja el punto de fuga como una X de un cierto grosor.
  */
-void dibujarX(int coordenadaX, int coordenadaY){
+void dibujarX(int coordX, int coordY, Mat img){
+
+	// Se obtienen los puntos para la X.
+	Point p1 = Point(coordX, coordY-10);
+	Point p2 = Point(coordX, coordY+10);
+	Point p3 = Point(coordX-10, coordY);
+	Point p4 = Point(coordX+10, coordY);
+
+	// Se dibuja la X.
+	line(img, p1, p2, CV_RGB(255,0,0), 4);
+	line(img, p3, p4, CV_RGB(255,0,0), 4);
+	circle(img, Point(coordX,coordY), 1, CV_RGB(255,0,0), 3);
+
+	mostrarMatriz(img, "Imagen final");		// Se muestra la imagen.
 
 }
 
