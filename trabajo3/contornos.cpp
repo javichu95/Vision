@@ -63,11 +63,13 @@ void fugaImagen(Mat img){
 
 	img = aplicarFiltro(img, 3, 3, 0, 0);	// Se aplica un filtro Gaussiano.
 
-	//Scharr(src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
-	Sobel(img, grad_x, CV_32F, 1, 0, 3);	// Gradiente en el eje X.
+	// Gradiente en el eje X.
+	//Sobel(img, grad_x, CV_32F, 1, 0, CV_SCHARR);		// Operador Scarr.
+	Sobel(img, grad_x, CV_32F, 1, 0, 3);				// Operador Sobel.
 
-	Sobel(img, grad_y, CV_32F, 0, 1, 3);	// Gradiente en el eje Y.
-	//Scharr(src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
+	// Gradiente en el eje Y.
+	//Sobel(img, grad_y, CV_32F, 0, 1, CV_SCHARR);		// Operador Scharr.
+	Sobel(img, grad_y, CV_32F, 0, 1, 3);				// Operador Sobel.
 
 	grad_y = -grad_y;			// Se invierte el eje.
 
@@ -81,7 +83,7 @@ void fugaImagen(Mat img){
 	cartToPolar(grad_x, grad_y, modulo, orientacion);
 
 	// Se muestra el módulo por pantalla.
-	mostrar = (modulo/4)/255;
+	mostrar = modulo/255;
 	mostrarMatriz(mostrar, "Modulo");
 
 	// Se muestra el ángulo por pantalla.
@@ -202,10 +204,11 @@ void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
 
 	float dist = distEjes(theta);		// Distancia calculada por nosotros.
     float a = fmod(theta,(CV_PI/2));	// Distancia en codigo GITHUB.
+    float dist2 = theta - (int)(theta/(CV_PI/2))*(CV_PI/2);
 
     if(a != dist){
-    	cout << "Distancia obtenida: " << dist << " " << "A: " << a << endl;
-    	waitKey(0);
+    	cout << "Distancia obtenida: " << dist << " " << "Distancia2: " << dist2 << " " << "A: " << a << endl;
+    	//waitKey(0);
     }
 
     /*
@@ -217,8 +220,8 @@ void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
     	int corte = rho / cosf(theta);		// Se calcula el corte con el eje.
 
         if (corte < src.cols/2 && corte >= -src.cols/2) {	// Se comprueba que corta en la imagen.
-            corte = corte + src.cols/2;
-            rectas[corte] = rectas[corte] + 1;
+            corte = corte + src.cols/2;		// Se pone el corte en el rango.
+            rectas[corte] = rectas[corte] + 1;	// Se actualiza el valor.
 
             /*
              * PARTE PARA MOSTRAR LAS RECTAS

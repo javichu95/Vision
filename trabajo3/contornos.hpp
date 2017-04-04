@@ -9,7 +9,9 @@ using namespace cv;
 using namespace std;
 
 // Variables utilizadas.
-float umbral = 70.0;			// Valor umbral.
+float umbralSobel = 60.0;			// Valor umbral para sobel.
+float umbralScharr = 140.0;			// Valor umbral para scharr.
+float umbral = umbralSobel;
 
 // Métodos para el punto de fuga.
 Mat leerImagen(string);		// Método que lee la imagen.
