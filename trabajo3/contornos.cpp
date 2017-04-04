@@ -216,23 +216,7 @@ void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
      */
     if (a > 0.07) {		// Se comprueba si es línea vertical u horizontal (4 grados).
 
-    	float rho = x*cosf(theta) + y*sinf(theta);	// Se obtiene rho.
-    	int corte = rho / cosf(theta);		// Se calcula el corte con el eje.
 
-        if (corte < src.cols/2 && corte >= -src.cols/2) {	// Se comprueba que corta en la imagen.
-            corte = corte + src.cols/2;		// Se pone el corte en el rango.
-            rectas[corte] = rectas[corte] + 1;	// Se actualiza el valor.
-
-            /*
-             * PARTE PARA MOSTRAR LAS RECTAS
-             */
-            //circle(src, Point(j,i), 1, CV_RGB(255,0,0));
-            //line(src, Point(j,i), Point(corte,src.rows/2), CV_RGB(255,0,0));
-            //imshow("Pasillo", src);
-            //for (;;) {
-            	//if (waitKey(30)>=0) { destroyAllWindows();  break; }
-            //}
-        }
     }
 
 }
