@@ -205,27 +205,21 @@ void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
     }
 
     /*
-     * USA PUNTO PENDIENTE ES LO QUE INTENTO ADAPTAR.
+     * Con a va bien y con dist no, hay que revisarlo.
      */
     if (a > 0.07) {		// Se comprueba si es línea vertical u horizontal (4 grados).
-    	int rho = x*cosf(theta) + y*sinf(theta);
-        float m = tan(theta-(CV_PI/2));
-        float n = y-m*x;
 
-        // interseccion de y=mx+n con y=0
-        int corte = -n/m;
+    	float rho = x*cosf(theta) + y*sinf(theta);	// Se obtiene rho.
+    	int corte = rho / cosf(theta);		// Se calcula el corte con el eje.
 
-        //cout << "RHO: " << rho << "CORTE: " << corte << endl;
-
-        corte = corte + src.cols/2;
-        if (corte<src.cols && corte>=0) {
+        if (corte < src.cols/2 && corte >= -src.cols/2) {	// Se comprueba que corta en la imagen.
+            corte = corte + src.cols/2;
             rectas[corte] = rectas[corte] + 1;
-            //circle(src, Point(j,i), 1, CV_RGB(255,0,0));
+
             /*
-             * Descomentar para visualizar las rectas perpendiculares al gradiente que
-             * votan para el calculo del punto de fuga.
-             *
+             * PARTE PARA MOSTRAR LAS RECTAS
              */
+            //circle(src, Point(j,i), 1, CV_RGB(255,0,0));
             //line(src, Point(j,i), Point(corte,src.rows/2), CV_RGB(255,0,0));
             //imshow("Pasillo", src);
             //for (;;) {
@@ -247,17 +241,24 @@ float distEjes(float theta){
 	distancias[3] = abs(3*CV_PI/2 - theta);
 	distancias[4] = abs(2*CV_PI - theta);
 
-	cout << "Theta: " << theta << endl;
+	//cout << "Theta: " << theta << endl;
 
 	float minimo = 2*CV_PI;
 	for(int i = 0; i < 4; i++){
-		cout << "Distancias: " << distancias[i] << endl;
+		//cout << "Distancias: " << distancias[i] << endl;
 		if(distancias[i] < minimo){
 			minimo = distancias[i];
 		}
 	}
 
 	return minimo;			// Se devuelve el mínimo.
+}
+
+/*
+ * Método que dibuja el punto de fuga como una X de un cierto grosor.
+ */
+void dibujarX(int coordenadaX, int coordenadaY){
+
 }
 
 /*
