@@ -257,7 +257,7 @@ void dibujarX(int coordX, int coordY, Mat img){
 void fugaReal(){
 
 	VideoCapture TheVideoCapturer;		// Objeto para la cámara.
-	Mat bgrMap, dst, imgGris;		// Matriz de lo obtenido de la cámara.
+	Mat bgrMap, canny, imgGris, puntoFuga;		// Matriz de lo obtenido de la cámara.
 
 	TheVideoCapturer.open(0);	// Se abre la cámara.
 
@@ -269,49 +269,66 @@ void fugaReal(){
 	TheVideoCapturer.grab();
 	TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
 
-	char key = 0;
+	char key = 0;			// Variable para la tecla pulsada.
 
 	while(key != 27 && TheVideoCapturer.grab()) {		// Mientras sea distinto de ESC...
+
 		TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
-		key = waitKey(20);
 
-		cvtColor(bgrMap,imgGris, CV_BGR2GRAY);
+		puntoFuga = bgrMap.clone();		// Se clona la matriz.
 
-		Canny(imgGris, dst, 70, 210, 3);
+		cvtColor(bgrMap, imgGris, CV_BGR2GRAY);		// Cambia el color a escala de grises.
 
-		vector<Vec2f> lines;
-		HoughLines(dst, lines, 1, CV_PI/180, 220.0, 0, 0 );
-		vector<vector<int>> votacion(imgGris.rows);
-		for(int i = 0; i < bgrMap.rows; i++) {
-			votacion[i] = vector<int>(imgGris.cols);
-			for(int j = 0; j < bgrMap.cols; j++) {
+		Canny(imgGris, canny, 70, 210, 3);		// Aplica el operador de Canny.
+
+		vector<Vec2f> lines;		// Vector para las líneas.
+		// Obtiene las líneas de contornos.
+		HoughLines(canny, lines, 1, CV_PI/180, 220.0, 0, 0 );
+
+		vector<vector<int>> votacion(imgGris.rows/numPixeles);		// Vector para la votación.
+
+		// Se inicializa la matríz de votación.
+		for(int i = 0; i < bgrMap.rows/numPixeles; i++) {
+			votacion[i] = vector<int>(imgGris.cols/numPixeles);
+			for(int j = 0; j < bgrMap.cols/numPixeles; j++) {
 				votacion[i][j] = 0;
 			}
 		}
 
-		for( size_t i = 0; i < lines.size(); i++ )
-		{
-		  float rho = lines[i][0], theta = lines[i][1];
-		  Point pt1, pt2;
-		  float dist = theta - (int)(theta/(CV_PI/2))*(CV_PI/2);
-		  if(dist > 0.07) {
-			  double a = cos(theta), b = sin(theta);
-			  double x0 = a*rho, y0 = b*rho;
-			  votarPuntos(votacion,rho, theta, imgGris);
+		Point pt1, pt2;		// Puntos para representar las rectas.
 
-			  pt1.x = cvRound(x0 + 1000*(-b));
-			  pt1.y = cvRound(y0 + 1000*(a));
-			  pt2.x = cvRound(x0 - 1000*(-b));
-			  pt2.y = cvRound(y0 - 1000*(a));
-			  clipLine(bgrMap.size(),pt1,pt2);
-			  line( bgrMap, pt1, pt2, Scalar(255,0,0), 1, CV_AA);
-		  }
+		// Se recorren las líneas.
+		for( size_t i = 0; i < lines.size(); i++ ){
+			// Se obtiene el valor de rho y theta.
+			float rho = lines[i][0], theta = lines[i][1];
+
+			// Se calcula la distancia al eje.
+			float dist = theta - (int)(theta/(CV_PI/2))*(CV_PI/2);
+
+			if(dist > 0.17) {		// Si es menor que un umbral...
+				// Sacamos los valores de x e y.
+				double a = cos(theta), b = sin(theta);
+				double x0 = a*rho, y0 = b*rho;
+
+				// Realizamos la votación para esa recta.
+				votarPuntos(votacion, rho, theta, imgGris);
+
+				// Se sacan los puntos y se dibujan las rectas.
+				pt1.x = cvRound(x0 + 1000*(-b));
+				pt1.y = cvRound(y0 + 1000*(a));
+				pt2.x = cvRound(x0 - 1000*(-b));
+				pt2.y = cvRound(y0 - 1000*(a));
+				clipLine(bgrMap.size(),pt1,pt2);
+				line(bgrMap, pt1, pt2, Scalar(255,0,0), 1, CV_AA);
+			}
 		}
 
-		int maxX = 0,maxY = 0, maximo = 0;
 
-		for(int i = 0; i < imgGris.rows; i++) {
-			for(int j = 0; j < imgGris.cols; j++) {
+		int maxX = 0, maxY = 0, maximo = 0;		// Variables para el máximo votado.
+
+		// Se recorre la matríz y se obtiene el más votado.
+		for(int i = 0; i < imgGris.rows/numPixeles; i++) {
+			for(int j = 0; j < imgGris.cols/numPixeles; j++) {
 				if(votacion[i][j] > maximo) {
 					maximo = votacion[i][j];
 					maxX = i;
@@ -320,27 +337,45 @@ void fugaReal(){
 			}
 		}
 
-		dibujarX(maxX, maxY, bgrMap);
+		// Se dibuja el punto de fuga.
+		dibujarX(maxX*numPixeles, maxY*numPixeles, puntoFuga);
 
-		mostrarMatriz(bgrMap, "fuga");
+		// Se dibujan las líneas de contornos.
+		mostrarMatriz(bgrMap, "Lineas contorno");
+
+		// Se reinicializa la matríz de la votación.
 		reInicializarVotacion(votacion, imgGris);
+
+		key = waitKey(20);
 	}
 
 }
 
+/*
+ * Se reinicializa la matríz de la votación.
+ */
 void reInicializarVotacion(vector<vector<int>> &votacion, Mat imgGris) {
-	for(int i = 0; i < imgGris.rows; i++) {
-		for(int j = 0; j < imgGris.cols; j++) {
+
+	// Se recorren las filas y columnas y se inicializa a 0.
+	for(int i = 0; i < imgGris.rows/numPixeles; i++) {
+		for(int j = 0; j < imgGris.cols/numPixeles; j++) {
 			votacion[i][j] = 0;
 		}
 	}
 }
 
+/*
+ * Método que realiza la votación de los puntos de una recta.
+ */
 void votarPuntos(vector<vector<int>> &rectas, float rho, float theta, Mat img) {
+
+	// Se recorren los píxeles.
 	for(int i = 0; i < img.rows; i++) {
+		// Se saca la coordenada.
 		int y = (int)((rho-i*cosf(theta))/sinf(theta));
+		// Si está en el rango se aumenta el índice.
 		if(y >= 0 && y < img.cols) {
-			rectas[i][y] += 1;
+			rectas[i/numPixeles][y/numPixeles] += 1;
 		}
 	}
 }
