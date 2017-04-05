@@ -257,7 +257,7 @@ void dibujarX(int coordX, int coordY, Mat img){
 void fugaReal(){
 
 	VideoCapture TheVideoCapturer;		// Objeto para la cámara.
-	Mat bgrMap, canny, imgGris, puntoFuga;		// Matriz de lo obtenido de la cámara.
+	Mat bgrMap, canny, imgGris;		// Matriz de lo obtenido de la cámara.
 
 	TheVideoCapturer.open(0);	// Se abre la cámara.
 
@@ -274,8 +274,6 @@ void fugaReal(){
 	while(key != 27 && TheVideoCapturer.grab()) {		// Mientras sea distinto de ESC...
 
 		TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
-
-		puntoFuga = bgrMap.clone();		// Se clona la matriz.
 
 		cvtColor(bgrMap, imgGris, CV_BGR2GRAY);		// Cambia el color a escala de grises.
 
@@ -338,7 +336,7 @@ void fugaReal(){
 		}
 
 		// Se dibuja el punto de fuga.
-		dibujarX(maxX*numPixeles, maxY*numPixeles, puntoFuga);
+		dibujarX(maxX*numPixeles, maxY*numPixeles, bgrMap);
 
 		// Se dibujan las líneas de contornos.
 		mostrarMatriz(bgrMap, "Lineas contorno");
