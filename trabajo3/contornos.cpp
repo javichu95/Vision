@@ -6,9 +6,6 @@
  */
 int main(int argc, char *argv[]) {
 
-	argc = 1;
-	argv[1] = (char*)("imagenesT3/pasillo1.pgm");
-
 	if(argc > 2 ) {			// Comprueba el número de argumentos.
 		cout << "Usar: contornos ó contornos [imagen]" << endl;
 		return 0;
@@ -199,12 +196,9 @@ int transformada(Mat imagen, Mat orientacion, Mat modulo){
  */
 void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
 
-
+	// Se calcula la distancia al eje más cercano.
     float dist = theta - (int)(theta/(CV_PI/2))*(CV_PI/2);
 
-    /*
-     * Con a va bien y con dist no, hay que revisarlo.
-     */
     if (dist > 0.07) {		// Se comprueba si es línea vertical u horizontal (4 grados).
 
     	float rho = x*cosf(theta) + y*sinf(theta);	// Se obtiene rho.
@@ -213,16 +207,6 @@ void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
         if (corte < src.cols/2 && corte >= -src.cols/2) {	// Se comprueba que corta en la imagen.
             corte = corte + src.cols/2;		// Se pone el corte en el rango.
             rectas[corte] = rectas[corte] + 1;	// Se actualiza el valor.
-
-            /*
-             * PARTE PARA MOSTRAR LAS RECTAS
-             */
-            /*circle(src, Point(j,i), 1, CV_RGB(255,0,0));
-            line(src, Point(j,i), Point(corte,src.rows/2), CV_RGB(255,0,0));
-            imshow("Pasillo", src);
-            for (;;) {
-            	if (waitKey(30)>=0) { destroyAllWindows();  break; }
-            }*/
         }
     }
 
@@ -281,8 +265,6 @@ void fugaReal(){
 		// Obtiene las líneas de contornos.
 		HoughLines(canny, lines, 1, CV_PI/180, 160.0, 0, 0 );
 
-		cout << lines.size() << endl;
-
 		vector<vector<int>> votacion(imgGris.rows/numPixeles);		// Vector para la votación.
 
 		// Se inicializa la matríz de votación.
@@ -337,9 +319,6 @@ void fugaReal(){
 
 		// Se dibuja el punto de fuga.
 		dibujarX(maxX*numPixeles, maxY*numPixeles, bgrMap);
-
-		// Se dibujan las líneas de contornos.
-		mostrarMatriz(bgrMap, "Lineas contorno");
 
 		// Se reinicializa la matríz de la votación.
 		reInicializarVotacion(votacion, imgGris);
