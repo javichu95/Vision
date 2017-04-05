@@ -6,7 +6,7 @@
  */
 int main(int argc, char *argv[]) {
 
-	argc = 2;
+	argc = 1;
 	argv[1] = (char*)("imagenesT3/pasillo3.pgm");
 
 	if(argc > 2 ) {			// Comprueba el número de argumentos.
@@ -257,7 +257,7 @@ void dibujarX(int coordX, int coordY, Mat img){
 void fugaReal(){
 
 	VideoCapture TheVideoCapturer;		// Objeto para la cámara.
-	Mat bgrMap;		// Matriz de lo obtenido de la cámara.
+	Mat bgrMap, dst, imgGris;		// Matriz de lo obtenido de la cámara.
 
 	TheVideoCapturer.open(0);	// Se abre la cámara.
 
@@ -269,4 +269,78 @@ void fugaReal(){
 	TheVideoCapturer.grab();
 	TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
 
+	char key = 0;
+
+	while(key != 27 && TheVideoCapturer.grab()) {		// Mientras sea distinto de ESC...
+		TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
+		key = waitKey(20);
+
+		cvtColor(bgrMap,imgGris, CV_BGR2GRAY);
+
+		Canny(imgGris, dst, 70, 210, 3);
+
+		vector<Vec2f> lines;
+		HoughLines(dst, lines, 1, CV_PI/180, 220.0, 0, 0 );
+		vector<vector<int>> votacion(imgGris.rows);
+		for(int i = 0; i < bgrMap.rows; i++) {
+			votacion[i] = vector<int>(imgGris.cols);
+			for(int j = 0; j < bgrMap.cols; j++) {
+				votacion[i][j] = 0;
+			}
+		}
+
+		for( size_t i = 0; i < lines.size(); i++ )
+		{
+		  float rho = lines[i][0], theta = lines[i][1];
+		  Point pt1, pt2;
+		  float dist = theta - (int)(theta/(CV_PI/2))*(CV_PI/2);
+		  if(dist > 0.07) {
+			  double a = cos(theta), b = sin(theta);
+			  double x0 = a*rho, y0 = b*rho;
+			  votarPuntos(votacion,rho, theta, imgGris);
+
+			  pt1.x = cvRound(x0 + 1000*(-b));
+			  pt1.y = cvRound(y0 + 1000*(a));
+			  pt2.x = cvRound(x0 - 1000*(-b));
+			  pt2.y = cvRound(y0 - 1000*(a));
+			  clipLine(bgrMap.size(),pt1,pt2);
+			  line( bgrMap, pt1, pt2, Scalar(255,0,0), 1, CV_AA);
+		  }
+		}
+
+		int maxX = 0,maxY = 0, maximo = 0;
+
+		for(int i = 0; i < imgGris.rows; i++) {
+			for(int j = 0; j < imgGris.cols; j++) {
+				if(votacion[i][j] > maximo) {
+					maximo = votacion[i][j];
+					maxX = i;
+					maxY = j;
+				}
+			}
+		}
+
+		dibujarX(maxX, maxY, bgrMap);
+
+		mostrarMatriz(bgrMap, "fuga");
+		reInicializarVotacion(votacion, imgGris);
+	}
+
+}
+
+void reInicializarVotacion(vector<vector<int>> &votacion, Mat imgGris) {
+	for(int i = 0; i < imgGris.rows; i++) {
+		for(int j = 0; j < imgGris.cols; j++) {
+			votacion[i][j] = 0;
+		}
+	}
+}
+
+void votarPuntos(vector<vector<int>> &rectas, float rho, float theta, Mat img) {
+	for(int i = 0; i < img.rows; i++) {
+		int y = (int)((rho-i*cosf(theta))/sinf(theta));
+		if(y >= 0 && y < img.cols) {
+			rectas[i][y] += 1;
+		}
+	}
 }

@@ -25,4 +25,8 @@ void votar(int [], int, int, int, int, float, Mat);		// Método que vota a una c
 void dibujarX(int, int, Mat);	// Método que dibuja una X en el punto de fuga.
 void fugaReal();		// Método para obtener punto de fuga en tiempo real.
 
+void votarPuntos(vector<vector<int>>&, float , float, Mat);
+
+void reInicializarVotacion(vector<vector<int>>&, Mat);
+
 #endif
