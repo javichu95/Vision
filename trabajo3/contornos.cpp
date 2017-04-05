@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
 
 	argc = 1;
-	argv[1] = (char*)("imagenesT3/pasillo3.pgm");
+	argv[1] = (char*)("imagenesT3/pasillo1.pgm");
 
 	if(argc > 2 ) {			// Comprueba el número de argumentos.
 		cout << "Usar: contornos ó contornos [imagen]" << endl;
@@ -98,8 +98,6 @@ void fugaImagen(Mat img){
 
 	// Se calcula el índice de la columna del punto de fuga.
 	int maxIndice = transformada(img, orientacion, modulo);
-
-	cout << "Columna máxima: " << maxIndice;
 
 	dibujarX(maxIndice, img.rows/2, img);	// Se señala con una X el punto de fuga.
 
@@ -219,12 +217,12 @@ void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
             /*
              * PARTE PARA MOSTRAR LAS RECTAS
              */
-            //circle(src, Point(j,i), 1, CV_RGB(255,0,0));
-            //line(src, Point(j,i), Point(corte,src.rows/2), CV_RGB(255,0,0));
-            //imshow("Pasillo", src);
-            //for (;;) {
-            	//if (waitKey(30)>=0) { destroyAllWindows();  break; }
-            //}
+            /*circle(src, Point(j,i), 1, CV_RGB(255,0,0));
+            line(src, Point(j,i), Point(corte,src.rows/2), CV_RGB(255,0,0));
+            imshow("Pasillo", src);
+            for (;;) {
+            	if (waitKey(30)>=0) { destroyAllWindows();  break; }
+            }*/
         }
     }
 
@@ -281,7 +279,9 @@ void fugaReal(){
 
 		vector<Vec2f> lines;		// Vector para las líneas.
 		// Obtiene las líneas de contornos.
-		HoughLines(canny, lines, 1, CV_PI/180, 220.0, 0, 0 );
+		HoughLines(canny, lines, 1, CV_PI/180, 160.0, 0, 0 );
+
+		cout << lines.size() << endl;
 
 		vector<vector<int>> votacion(imgGris.rows/numPixeles);		// Vector para la votación.
 
