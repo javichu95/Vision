@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
 
 	argc = 2;
-	argv[1] = (char*)("imagenesT3/pasillo2.pgm");
+	argv[1] = (char*)("imagenesT3/pasillo3.pgm");
 
 	if(argc > 2 ) {			// Comprueba el número de argumentos.
 		cout << "Usar: contornos ó contornos [imagen]" << endl;
@@ -202,48 +202,31 @@ int transformada(Mat imagen, Mat orientacion, Mat modulo){
 void votar(int rectas[], int x, int y, int j, int i, float theta, Mat src){
 
 
-	float dist = distEjes(theta);		// Distancia calculada por nosotros.
-    float a = fmod(theta,(CV_PI/2));	// Distancia en codigo GITHUB.
-    float dist2 = theta - (int)(theta/(CV_PI/2))*(CV_PI/2);
-
-    if(a != dist){
-    	cout << "Distancia obtenida: " << dist << " " << "Distancia2: " << dist2 << " " << "A: " << a << endl;
-    	//waitKey(0);
-    }
+    float dist = theta - (int)(theta/(CV_PI/2))*(CV_PI/2);
 
     /*
      * Con a va bien y con dist no, hay que revisarlo.
      */
-    if (a > 0.07) {		// Se comprueba si es línea vertical u horizontal (4 grados).
+    if (dist > 0.07) {		// Se comprueba si es línea vertical u horizontal (4 grados).
 
-    	ALEX NO MIRES LO QUE NO DEBES.......
+    	float rho = x*cosf(theta) + y*sinf(theta);	// Se obtiene rho.
+    	int corte = rho / cosf(theta);		// Se calcula el corte con el eje.
+
+        if (corte < src.cols/2 && corte >= -src.cols/2) {	// Se comprueba que corta en la imagen.
+            corte = corte + src.cols/2;		// Se pone el corte en el rango.
+            rectas[corte] = rectas[corte] + 1;	// Se actualiza el valor.
+
+            /*
+             * PARTE PARA MOSTRAR LAS RECTAS
+             */
+            //circle(src, Point(j,i), 1, CV_RGB(255,0,0));
+            //line(src, Point(j,i), Point(corte,src.rows/2), CV_RGB(255,0,0));
+            //imshow("Pasillo", src);
+            //for (;;) {
+            	//if (waitKey(30)>=0) { destroyAllWindows();  break; }
+            //}
+        }
     }
-
-}
-
-/*
- * Método que calcula la distancia del ángulo hasta el eje más cercano.
- */
-float distEjes(float theta){
-
-	float distancias [5];
-	distancias[0] = abs(0 - theta);
-	distancias[1] = abs(CV_PI/2 - theta);
-	distancias[2] = abs(CV_PI - theta);
-	distancias[3] = abs(3*CV_PI/2 - theta);
-	distancias[4] = abs(2*CV_PI - theta);
-
-	cout << "Theta: " << theta << endl;
-
-	float minimo = 2*CV_PI;
-	for(int i = 0; i < 4; i++){
-		cout << "Distancias: " << distancias[i] << endl;
-		if(distancias[i] < minimo){
-			minimo = distancias[i];
-		}
-	}
-
-	return minimo;			// Se devuelve el mínimo.
 
 }
 

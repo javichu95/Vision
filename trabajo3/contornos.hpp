@@ -22,7 +22,6 @@ void mostrarPuntos(Mat, Mat);		// Muestra los puntos según el umbral.
 // Método que calcula la transformada de Hough.
 int transformada(Mat imagen, Mat orientacion, Mat modulo);
 void votar(int [], int, int, int, int, float, Mat);		// Método que vota a una cierta recta.
-float distEjes(float);		// Método que calcula la distancia al eje más cercano.
 void dibujarX(int, int, Mat);	// Método que dibuja una X en el punto de fuga.
 void fugaReal();		// Método para obtener punto de fuga en tiempo real.
 
