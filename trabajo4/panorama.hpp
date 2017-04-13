@@ -10,10 +10,17 @@ using namespace cv;
 using namespace std;
 
 // Variables utilizadas.
-list<string> ficheros;		// Nombre de todos los ficheros del directorio.
+list<Mat> ficheros;		// Nombre de todos los ficheros del directorio.
+int camara = 1;		// Variable para seleccionar la cámara.
+int totalFotos = 5;		// Número total de fotos a capturar de forma automática.
+int tiempo = 10000;		// Tiempo para sacar las fotos de forma automática.
+Mat panorama;			// Matriz con el panorama completo.
 
-// Métodos para el punto de fuga.
-void menu();		// Método que muestra el menú por pantalla.
-void leerArchivos(string);		// Método que lee las imágenes de un directorio.
+// Métodos para crear el panorama.
+void menu();					// Método que muestra el menú por pantalla.
+int leerArchivos(string);		// Método que lee las imágenes de un directorio.
+void capturarTeclado();			// Método para capturar imágenes por el teclado.
+void capturarAutomatica();		// Método que captura imágenes de manera automática.
+void construirPanoramica(Mat);	// Método que construye el panorama con la nueva imagen.
 
 #endif
