@@ -25,6 +25,7 @@ int main(int argc, char *argv[]) {
 			cout << "Escriba la ruta: ";	// Se escribe la ruta de las imágenes.
 			cin >> ruta;	// Se lee la ruta de las imágenes.
 			leerArchivos(ruta);		// Se leen las imágenes y se guardan en una lista.
+			capturarDirectorio();	// Se crea el panorama con las imágenes del directorio.
 			break;
 		case 50:		// Se toma imágenes por teclado.
 			cout << "Capturando del teclado..." << endl;
@@ -114,6 +115,21 @@ int leerArchivos(string dir){
 }
 
 /*
+ * Método que crea el panorama con las imágenes que se han obtenido del
+ * directorio.
+ */
+void capturarDirectorio(){
+
+	int longitud = ficheros.size();		// Número de imágenes.
+	for(int i=0; i<longitud; i++){		// Recorremos las imágenes.
+		Mat imagen = ficheros.front();
+		ficheros.pop_front();		// Se saca la imagen de la lista.
+		cvtColor(imagen, imagen, CV_RGB2GRAY);		// Se pasa a escala de grises.
+		construirPanorama(imagen);
+	}
+}
+
+/*
  * Método que captura las imágenes con el teclado.
  */
 void capturarTeclado(){
@@ -140,6 +156,8 @@ void capturarTeclado(){
 		switch(key){
 		case 32:		// Si es espacio, se captura la imagen.
 			imshow("Foto", bgrMap);
+			cvtColor(bgrMap, bgrMap, CV_RGB2GRAY);		// Se pasa a escala de grises.
+			construirPanorama(bgrMap);		// Se añade al panorama.
 			break;
 		default:		// Si es cualquier otra tecla...
 			break;
@@ -181,6 +199,8 @@ void capturarAutomatica(){
 
 		TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
 		imshow("Foto", bgrMap);		// Se muestra la foto tomada.
+		cvtColor(bgrMap, bgrMap, CV_RGB2GRAY);		// Se pasa a escala de grises.
+		construirPanorama(bgrMap);
 
 		waitKey(tiempo);				// Se espera el tiempo.
 
@@ -194,6 +214,33 @@ void capturarAutomatica(){
  */
 void construirPanorama(Mat nuevaImagen){
 
-	// Va recibiendo en cada llamada la matríz con la nueva imagen
-	// y la añade a la variable global panorama.
+	//-- Step 1: Detect the keypoints using SURF Detector
+	int minHessian = 400;
+
+	/*
+	 * PRUEBA 1
+	 */
+	/*Ptr<SURF> surf=SURF::create(minHessian);
+	std::vector<KeyPoint> keypts;
+	Mat desc;
+	surf->detectAndCompute(img,noArray(),keypts,desc);*/
+
+	/*
+	 * PRUEBA 2
+	 */
+
+	//SurfFeatureDetector detector(minHessian);
+
+	std::vector< KeyPoint > keypoints_object, keypoints_scene;
+
+	//detector.detect( gray_image1, keypoints_object );
+	//detector.detect( gray_image2, keypoints_scene );
+
+	//-- Step 2: Calculate descriptors (feature vectors)
+	//SurfDescriptorExtractor extractor;
+
+	Mat descriptors_object, descriptors_scene;
+
+	//extractor.compute( gray_image1, keypoints_object, descriptors_object );
+	//extractor.compute( gray_image2, keypoints_scene, descriptors_scene );
 }
