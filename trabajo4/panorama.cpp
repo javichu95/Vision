@@ -220,10 +220,17 @@ void construirPanorama(Mat nuevaImagen){
 	/*
 	 * PRUEBA 1
 	 */
-	/*Ptr<SURF> surf=SURF::create(minHessian);
+	Ptr<xfeatures2d::SURF> surf=xfeatures2d::SURF::create(minHessian);
 	std::vector<KeyPoint> keypts;
 	Mat desc;
-	surf->detectAndCompute(img,noArray(),keypts,desc);*/
+	surf->detectAndCompute(nuevaImagen,noArray(),keypts,desc);
+	Mat img_kpts;
+	drawKeypoints( nuevaImagen, keypts, img_kpts, Scalar::all(-1),
+			DrawMatchesFlags::DEFAULT );
+	imshow("Puntos de interes",img_kpts);
+
+	Ptr<BFMatcher> bf = BFMatcher::create(); //Fuerza bruta
+	//bf->knnMatch();
 
 	/*
 	 * PRUEBA 2
@@ -231,7 +238,7 @@ void construirPanorama(Mat nuevaImagen){
 
 	//SurfFeatureDetector detector(minHessian);
 
-	std::vector< KeyPoint > keypoints_object, keypoints_scene;
+	//std::vector< KeyPoint > keypoints_object, keypoints_scene;
 
 	//detector.detect( gray_image1, keypoints_object );
 	//detector.detect( gray_image2, keypoints_scene );
@@ -239,7 +246,7 @@ void construirPanorama(Mat nuevaImagen){
 	//-- Step 2: Calculate descriptors (feature vectors)
 	//SurfDescriptorExtractor extractor;
 
-	Mat descriptors_object, descriptors_scene;
+	//Mat descriptors_object, descriptors_scene;
 
 	//extractor.compute( gray_image1, keypoints_object, descriptors_object );
 	//extractor.compute( gray_image2, keypoints_scene, descriptors_scene );

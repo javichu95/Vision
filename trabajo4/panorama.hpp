@@ -3,6 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
 #include <opencv2/calib3d.hpp>
 #include <string>
 #include <dirent.h>
@@ -13,7 +14,7 @@ using namespace std;
 
 // Variables utilizadas.
 list<Mat> ficheros;		// Nombre de todos los ficheros del directorio.
-int camara = 1;		// Variable para seleccionar la cámara.
+int camara = 0;		// Variable para seleccionar la cámara.
 int totalFotos = 5;		// Número total de fotos a capturar de forma automática.
 int tiempo = 10000;		// Tiempo para sacar las fotos de forma automática.
 Mat panorama;			// Matriz con el panorama completo.
