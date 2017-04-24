@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
 
 	while(!finalizado){	// Bucle para indicar cuando terminar el programa.
 
+		primera = true;
 		menu();			// Se muestra el menú.
 		cin >> key;		// Se lee la tecla pulsada.
 
@@ -88,7 +89,7 @@ int leerArchivos(string dir){
 			if(elem.compare(".") != 0 && elem.compare("..") != 0){
 				cout << "Leyendo fichero: " << dir << "/" << elem << endl;
 				// Se lee la imagen.
-				Mat img = imread(dir+"/"+elem, CV_LOAD_IMAGE_GRAYSCALE);
+				Mat img = imread(dir+"/"+elem, CV_LOAD_IMAGE_COLOR);
 				if(!img.data){		// Se comprueba si se puede leer la imagen.
 					cout <<  "No se puede abrir la imagen: " << elem << endl ;
 					return 0;
@@ -121,12 +122,23 @@ int leerArchivos(string dir){
 void capturarDirectorio(){
 
 	int longitud = ficheros.size();		// Número de imágenes.
+
 	for(int i=0; i<longitud; i++){		// Recorremos las imágenes.
+
 		Mat imagen = ficheros.front();
 		ficheros.pop_front();		// Se saca la imagen de la lista.
-		cvtColor(imagen, imagen, CV_RGB2GRAY);		// Se pasa a escala de grises.
-		construirPanorama(imagen);
+		cvtColor(imagen, imagen, CV_BGR2GRAY);		// Se pasa a escala de grises.
+
+		if(primera){		// Se comprueba si es la primera imagen.
+			primera = false;
+			crearPrimera(imagen);		// Se crea la primera imagen.
+		} else{
+			construirPanorama(imagen);		// Se construye el panorama.
+		}
+
+
 	}
+
 }
 
 /*
@@ -156,8 +168,15 @@ void capturarTeclado(){
 		switch(key){
 		case 32:		// Si es espacio, se captura la imagen.
 			imshow("Foto", bgrMap);
-			cvtColor(bgrMap, bgrMap, CV_RGB2GRAY);		// Se pasa a escala de grises.
-			construirPanorama(bgrMap);		// Se añade al panorama.
+			cvtColor(bgrMap, bgrMap, CV_BGR2GRAY);		// Se pasa a escala de grises.
+
+			if(primera){		// Se comprueba si es la primera imagen.
+				primera = false;
+				crearPrimera(bgrMap);		// Se crea la primera imagen.
+			} else{
+				construirPanorama(bgrMap);		// Se añade al panorama.
+			}
+
 			break;
 		default:		// Si es cualquier otra tecla...
 			break;
@@ -199,14 +218,53 @@ void capturarAutomatica(){
 
 		TheVideoCapturer.retrieve(bgrMap);		// Obtenemos la imagen.
 		imshow("Foto", bgrMap);		// Se muestra la foto tomada.
-		cvtColor(bgrMap, bgrMap, CV_RGB2GRAY);		// Se pasa a escala de grises.
-		construirPanorama(bgrMap);
+		cvtColor(bgrMap, bgrMap, CV_BGR2GRAY);		// Se pasa a escala de grises.
+
+		if(primera){		// Se comprueba si es la primera imagen.
+			primera = false;
+			crearPrimera(bgrMap);		// Se crea la primera imagen.
+		} else{
+			construirPanorama(bgrMap);		// Se añade al panorama.
+		}
 
 		waitKey(tiempo);				// Se espera el tiempo.
 
 		numFotos++;			// Se actualiza el número de fotos tomadas.
 
 	}
+
+}
+
+/*
+ * Método que añade la primera imagen del panorama.
+ */
+void crearPrimera(Mat imagen){
+
+	panorama = imagen;
+
+	// Vector para los puntos de interés.
+	vector<KeyPoint> keyptsPano;
+
+	// Obtenemos los puntos de interés.
+	surf->detect(panorama,keyptsPano,noArray());
+
+	// Matriz para los descriptores.
+	Mat descPano;
+
+	// Obtenemos los descriptores.
+	surf->compute(panorama, keyptsPano, descPano);
+	//surf->detectAndCompute(panorama, noArray(), keyptsPano, descPano);
+
+	// Matriz para dibujar los puntos.
+	Mat img_kptsPano;
+
+	// Se dibujan los puntos.
+	drawKeypoints(panorama, keyptsPano, img_kptsPano, Scalar::all(-1),
+			DrawMatchesFlags::DEFAULT );
+	imshow("Puntos de interes panorama",img_kptsPano);
+
+	waitKey(0);
+
 }
 
 /*
@@ -214,40 +272,57 @@ void capturarAutomatica(){
  */
 void construirPanorama(Mat nuevaImagen){
 
-	//-- Step 1: Detect the keypoints using SURF Detector
-	int minHessian = 400;
+	// Vector para los puntos de interés.
+	vector<KeyPoint> keyptsNueva, keyptsPano;
 
-	/*
-	 * PRUEBA 1
-	 */
-	Ptr<xfeatures2d::SURF> surf=xfeatures2d::SURF::create(minHessian);
-	std::vector<KeyPoint> keypts;
-	Mat desc;
-	surf->detectAndCompute(nuevaImagen,noArray(),keypts,desc);
-	Mat img_kpts;
-	drawKeypoints( nuevaImagen, keypts, img_kpts, Scalar::all(-1),
+	// Obtenemos los puntos de interés.
+	surf->detect(nuevaImagen,keyptsNueva,noArray());
+	surf->detect(panorama,keyptsPano,noArray());
+
+	// Matriz para los descriptores.
+	Mat descNueva, descPano;
+
+	// Obtenemos los descriptores.
+	surf->compute(nuevaImagen, keyptsNueva, descNueva);
+	surf->compute(panorama, keyptsPano, descPano);
+	//surf->detectAndCompute(nuevaImagen, noArray(), keyptsNueva, descNueva);
+	//surf->detectAndCompute(panorama, noArray(), keyptsPano, descPano);
+
+	// Matriz para dibujar los puntos.
+	Mat img_kptsNueva, img_kptsPano;
+
+	// Se dibujan los puntos.
+	drawKeypoints(nuevaImagen, keyptsNueva, img_kptsNueva, Scalar::all(-1),
 			DrawMatchesFlags::DEFAULT );
-	imshow("Puntos de interes",img_kpts);
+	imshow("Puntos de interes nueva",img_kptsNueva);
+	drawKeypoints(panorama, keyptsPano, img_kptsPano, Scalar::all(-1),
+			DrawMatchesFlags::DEFAULT );
+	imshow("Puntos de interes panorama",img_kptsPano);
 
-	Ptr<BFMatcher> bf = BFMatcher::create(); //Fuerza bruta
-	//bf->knnMatch();
+	waitKey(0);
 
-	/*
-	 * PRUEBA 2
-	 */
+	// Se declara el comparador por fuerza bruta.
+	Ptr<BFMatcher> bf = BFMatcher::create(NORM_L2);
+	vector<vector<DMatch>> matches;			// Vector de vectores con los matches.
 
-	//SurfFeatureDetector detector(minHessian);
+	// Se obtienen los dos vecinos más cercanos.
+	bf->knnMatch(descNueva, descPano, matches, 2);
 
-	//std::vector< KeyPoint > keypoints_object, keypoints_scene;
+	// Se obtienen los emparejamientos buenos con el ratio 0,8.
+	vector<cv::DMatch> matchesCorrec;
+	for (int i = 0; i < matches.size(); ++i){
+		// Se comprueba si cumplen el ratio.
+		if (matches[i][0].distance < diff * matches[i][1].distance){
+			matchesCorrec.push_back(matches[i][0]);
+		}
+	}
 
-	//detector.detect( gray_image1, keypoints_object );
-	//detector.detect( gray_image2, keypoints_scene );
+	Mat img_matches;			// Matriz para mostrar los matches.
 
-	//-- Step 2: Calculate descriptors (feature vectors)
-	//SurfDescriptorExtractor extractor;
+	// Se dibujan los matches correctos.
+	drawMatches(nuevaImagen, keyptsNueva, panorama, keyptsPano, matchesCorrec, img_matches);
+	imshow("Matches",img_matches);
 
-	//Mat descriptors_object, descriptors_scene;
+	waitKey(0);
 
-	//extractor.compute( gray_image1, keypoints_object, descriptors_object );
-	//extractor.compute( gray_image2, keypoints_scene, descriptors_scene );
 }
