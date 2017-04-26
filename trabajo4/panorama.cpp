@@ -25,8 +25,10 @@ int main(int argc, char *argv[]) {
 		case 49:		// Se lee las imágenes desde un directorio.
 			cout << "Escriba la ruta: ";	// Se escribe la ruta de las imágenes.
 			cin >> ruta;	// Se lee la ruta de las imágenes.
-			leerArchivos(ruta);		// Se leen las imágenes y se guardan en una lista.
-			capturarDirectorio();	// Se crea el panorama con las imágenes del directorio.
+			if(leerArchivos(ruta)){		// Se leen las imágenes y se guardan en una lista.
+				capturarDirectorio();	// Se crea el panorama con las imágenes del directorio.
+			}
+
 			break;
 		case 50:		// Se toma imágenes por teclado.
 			cout << "Capturando del teclado..." << endl;
@@ -108,6 +110,7 @@ int leerArchivos(string dir){
 
 	} else{		// Si no se puede leer, se muestra el error.
 		cout << "El directorio no se puede leer." << endl;
+		return 0;
 	}
 	closedir(directorio);		// Se cierra el directorio.
 
