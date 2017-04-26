@@ -306,14 +306,14 @@ void construirPanorama(Mat nuevaImagen){
 
 	// Se declara el comparador por fuerza bruta.
 	Ptr<BFMatcher> bf = BFMatcher::create(NORM_L2);
-	vector<vector<DMatch>> matches;			// Vector de vectores con los matches.
+	vector<vector<DMatch> > matches;			// Vector de vectores con los matches.
 
 	// Se obtienen los dos vecinos más cercanos.
 	bf->knnMatch(descNueva, descPano, matches, 2);
 
 	// Se obtienen los emparejamientos buenos con el ratio 0,8.
 	vector<cv::DMatch> matchesCorrec;
-	for (int i = 0; i < matches.size(); ++i){
+	for (uint i = 0; i < matches.size(); ++i){
 		// Se comprueba si cumplen el ratio.
 		if (matches[i][0].distance < diff * matches[i][1].distance){
 			matchesCorrec.push_back(matches[i][0]);
@@ -328,4 +328,39 @@ void construirPanorama(Mat nuevaImagen){
 
 	waitKey(0);
 
+	 std::vector<Point2f> puntosImagen;
+	 std::vector<Point2f> puntosPanorama;
+	 for( size_t i = 0; i < matchesCorrec.size(); i++ )
+	  {
+	   //-- Get the keypoints from the good matches
+	   puntosImagen.push_back( keyptsNueva[ matchesCorrec[i].queryIdx ].pt );
+	   puntosPanorama.push_back( keyptsPano[ matchesCorrec[i].trainIdx ].pt );
+	 }
+
+	//Se encuentra la homografia entre la imagen y el panorama.
+	Mat H = findHomography(puntosImagen, puntosPanorama,RANSAC);
+
+	//CODIGO COPIADO
+	  //-- Get the corners from the image_1 ( the object to be "detected" )
+	  std::vector<Point2f> obj_corners(4);
+	  obj_corners[0] = cvPoint(0,0); obj_corners[1] = cvPoint( nuevaImagen.cols, 0 );
+	  obj_corners[2] = cvPoint( nuevaImagen.cols, nuevaImagen.rows ); obj_corners[3] = cvPoint( 0, nuevaImagen.rows );
+	  std::vector<Point2f> scene_corners(4);
+	  perspectiveTransform( obj_corners, scene_corners, H);
+	  //-- Draw lines between the corners (the mapped object in the scene - image_2 )
+	  line( img_matches, scene_corners[0] + Point2f( nuevaImagen.cols, 0),
+			  scene_corners[1] + Point2f( nuevaImagen.cols, 0),
+			  Scalar(0, 255, 0), 4 );
+	  line( img_matches, scene_corners[1] + Point2f( nuevaImagen.cols, 0),
+			  scene_corners[2] + Point2f( nuevaImagen.cols, 0),
+			  Scalar( 0, 255, 0), 4 );
+	  line( img_matches, scene_corners[2] + Point2f( nuevaImagen.cols, 0),
+			  scene_corners[3] + Point2f( nuevaImagen.cols, 0),
+			  Scalar( 0, 255, 0), 4 );
+	  line( img_matches, scene_corners[3] + Point2f( nuevaImagen.cols, 0),
+			  scene_corners[0] + Point2f( nuevaImagen.cols, 0),
+			  Scalar( 0, 255, 0), 4 );
+	  //-- Show detected matches
+	  imshow( "Good Matches & Object detection", img_matches );
+	  waitKey(0);
 }
